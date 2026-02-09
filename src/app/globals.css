@@ -124,3 +124,56 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Mobile Optimizations */
+@layer utilities {
+  /* Dynamic viewport height for mobile browsers */
+  .h-dvh {
+    height: 100dvh;
+  }
+  
+  .min-h-dvh {
+    min-height: 100dvh;
+  }
+  
+  /* Safe area padding for notched devices */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  
+  /* Touch action for better mobile scrolling */
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+  
+  /* Prevent text selection on interactive elements */
+  .select-none-touch {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+  
+  /* Smooth momentum scrolling on iOS */
+  .scroll-smooth-ios {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 640px) {
+  /* Reduce padding on small screens */
+  .mobile-compact {
+    padding: 0.5rem;
+  }
+  
+  /* Ensure touch targets are at least 44px */
+  button, 
+  [role="button"],
+  input[type="submit"] {
+    min-height: 44px;
+  }
+}

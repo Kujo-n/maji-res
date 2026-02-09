@@ -3,8 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 export default function LoginPage() {
   return (
-    <div className="flex h-screen w-full items-center justify-center bg-gray-50">
-      <Card className="w-[350px]">
+    <div className="flex h-dvh w-full items-center justify-center bg-gray-50 dark:bg-background p-4">
+      <Card className="w-full max-w-[350px]">
         <CardHeader>
           <CardTitle>Welcome to MAJI-RES</CardTitle>
           <CardDescription>Sign in to access the system</CardDescription>

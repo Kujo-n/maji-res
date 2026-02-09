@@ -14,12 +14,14 @@ export function LoginButton() {
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      router.push("/chat"); // ログイン後のリダイレクト先（仮）
-      router.refresh(); // AuthState更新反映のため
-    } catch (error) {
+      const result = await signInWithPopup(auth, provider);
+      console.log("Sign in success:", result.user);
+      router.push("/"); 
+      router.refresh(); 
+    } catch (error: unknown) {
       console.error("Login failed", error);
-      // TODO: Toast notification
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      alert(`Login failed: ${errorMessage}`); // Use alert for immediate visibility as toast might not be set up in this context
     } finally {
       setLoading(false);
     }

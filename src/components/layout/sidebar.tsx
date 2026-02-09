@@ -3,13 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { MessageCircle, Plus } from "lucide-react";
-import { usePathname } from "next/navigation";
 
-interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {}
-
-export function Sidebar({ className }: SidebarProps) {
-  const pathname = usePathname();
-
+export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div className={cn("pb-12", className)}>
       <div className="space-y-4 py-4">

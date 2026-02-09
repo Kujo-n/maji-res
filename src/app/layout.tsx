@@ -15,11 +15,23 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'MAJI-RES',
-  description: 'Multi-Agent John Intelligence Response System',
+  title: 'MAGI-RES',
+  description: 'Multi-Agent Group Intelligence Response System',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'MAGI',
+  },
+  icons: {
+    icon: '/icons/icon.svg',
+    apple: '/icons/icon.svg',
+  },
 };
 
 import { Toaster } from "@/components/ui/sonner";
+import { ServiceWorkerRegistration } from "@/components/pwa/sw-registration";
+import { OfflineIndicator } from "@/components/pwa/offline-indicator";
 
 export default function RootLayout({
   children,
@@ -32,6 +44,8 @@ export default function RootLayout({
         <AuthProvider>
           {children}
           <Toaster />
+          <ServiceWorkerRegistration />
+          <OfflineIndicator />
         </AuthProvider>
       </body>
     </html>
