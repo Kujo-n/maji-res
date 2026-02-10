@@ -87,6 +87,7 @@ npm run test:e2e
 - [docs/requirements/spec.md](docs/requirements/spec.md): 仕様書
 - [docs/design/architecture.md](docs/design/architecture.md): アーキテクチャ構成
 - [docs/design/design_rules.md](docs/design/design_rules.md): デザインルール・コーディング規約
+- [docs/operations/setup_guide.md](docs/operations/setup_guide.md): 環境構築・デプロイ手順書
 
 ## ライセンス
 
