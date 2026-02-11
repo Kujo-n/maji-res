@@ -2,7 +2,7 @@ import { AuthGuard } from "@/components/auth/auth-guard";
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
 
-export default function ChatLayout({ children }: { children: React.ReactNode }) {
+export default function ChatLayoutWrapper({ children }: { children: React.ReactNode }) {
   return (
     <AuthGuard>
       <div className="flex min-h-screen flex-col">

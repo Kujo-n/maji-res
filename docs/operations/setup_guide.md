@@ -173,8 +173,14 @@ npm run dev
 ローカルの変更をGitHubリポジトリにプッシュします。
 
 ### 6-2. Vercelプロジェクト作成
-1. [Vercel Dashboard](https://vercel.com/dashboard) で **Add New ...** > **Project** を選択。
-2. GitHubリポジトリ `maji-response` をインポートします。
+
+**Private（非公開）リポジトリも問題なくインポート可能です。**
+
+1. [Vercel Dashboard](https://vercel.com/dashboard) にアクセスし、**Add New ...** > **Project** をクリックします。
+2. **Import Git Repository** の画面で、連携済みのアカウント（GitHub等）が表示されます。
+   - まだ連携していない場合は **Add GitHub Org or Account** から連携してください。
+3. リストから `maji-response` リポジトリを見つけ、**Import** ボタンをクリックします。
+   - リポジトリが表示されない場合、GitHub側の設定（Vercelへのアクセス許可）で対象リポジトリが許可されているか確認してください。
 
 ### 6-3. 環境変数の設定
 1. **Environment Variables** セクションを開きます。

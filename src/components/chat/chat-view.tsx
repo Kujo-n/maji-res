@@ -12,7 +12,7 @@ import { useEffect, useRef, useState } from "react";
 import { ResetButton } from "@/components/magi/reset-button";
 import { ContextStaleWarning } from "@/components/magi/context-stale-warning";
 
-export default function ChatPage() {
+export default function ChatView() {
   const { messages, agentResponses, verdict, syncRate, contradiction, isContextStale, append, reset, dismissStaleWarning, isLoading } = useMagiChat();
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -24,7 +24,6 @@ export default function ChatPage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
   };
-// ...
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,14 +50,6 @@ export default function ChatPage() {
         ) : (
           <div className="flex flex-col gap-6 pb-4">
             {messages.map((m) => {
-              // Show agent responses before the assistant's message, if it's the last assistant message
-              // Or better: show it as a separate block?
-              // The agentResponses state in useMagiChat is global for the current turn.
-              // But we want to persist it? 
-              // Currently useMagiChat resets agentResponses on new append.
-              // So we should display it at the bottom, before the loading indicator or with the latest assistant message.
-              
-              // Simple approach: Display current agentResponses at the bottom if available.
               return (
                   <MessageBubble key={m.id} role={m.role} content={m.content} />
               );
