@@ -197,4 +197,34 @@ npm run dev
 
 
 
-以上で構築は完了です。
+3. 「公開」をクリックします。
+
+---
+
+## 7. 再デプロイ (Redeploy)
+
+アプリケーションの修正や更新を行った場合の反映手順です。
+
+### 7-1. 自動デプロイ (推奨)
+変更を GitHub の連携ブランチ（通常は `main` または `master`）にプッシュすると、Vercel が自動的に検知してビルド・デプロイを開始します。
+
+```bash
+# 変更のコミット
+git add .
+git commit -m "fix: something"
+
+# GitHubへのプッシュ
+git push origin main
+```
+
+### 7-2. 手動デプロイ (Vercel Dashboard)
+自動デプロイが失敗した場合や、特定のコミットを再デプロイしたい場合に使用します。
+
+1. [Vercel Dashboard](https://vercel.com/dashboard) で対象プロジェクトを開きます。
+2. **Deployments** タブを開きます。
+3. 最新のデプロイ（または再開したい過去のデプロイ）の右側にある三点リーダー（Coreメニュー）をクリックします。
+4. **Redeploy** を選択します。
+   - "Redeploy with existing Build Cache": 高速ですが、依存関係の問題が解決しない場合があります。
+   - "Redeploy without Build Cache": クリーンビルドを行います。原因不明のエラー時はこちらを試してください。
+
+以上で構築・運用手順は完了です。
