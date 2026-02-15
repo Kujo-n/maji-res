@@ -1,9 +1,9 @@
 import { NextRequest } from "next/server";
-import { integrator } from "@/lib/agents/integrator";
+import { createIntegrator } from "@/lib/agents/integrator";
 
 export async function POST(req: NextRequest) {
   try {
-    const { message } = await req.json();
+    const { message, preset } = await req.json();
 
     if (!message || typeof message !== "string") {
       return new Response(JSON.stringify({ error: "Message is required" }), {
@@ -15,7 +15,10 @@ export async function POST(req: NextRequest) {
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          // Step 1: Run all three agents in parallel
+          // Step 1: Initialize integrator with requested preset
+          const integrator = createIntegrator(preset);
+          
+          // Step 2: Run all three agents in parallel
           const agentResponses = await integrator.parallelProcess(message);
 
           // Step 1.5: Calculate Sync Rate and detect contradictions

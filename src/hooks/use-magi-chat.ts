@@ -6,6 +6,7 @@ import { AgentResponse } from "@/lib/agents/types";
 import { ChatService } from "@/lib/services/chat-service";
 import { useAuth } from "@/lib/auth-context";
 import { useChatContext } from "@/components/chat/chat-context";
+import { usePreset } from "@/components/preset/preset-context";
 import { Message } from "@/lib/types";
 import { toast } from "sonner";
 
@@ -22,6 +23,7 @@ function generateId() {
 export function useMagiChat() {
   const { user } = useAuth();
   const { activeThreadId, setActiveThreadId, refreshHistory } = useChatContext();
+  const { preset } = usePreset();
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [agentResponses, setAgentResponses] = useState<AgentResponse[] | null>(null);
@@ -115,7 +117,7 @@ export function useMagiChat() {
       const response = await fetch("/api/magi/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: message.content }),
+        body: JSON.stringify({ message: message.content, preset }),
       });
 
       if (!response.ok) {

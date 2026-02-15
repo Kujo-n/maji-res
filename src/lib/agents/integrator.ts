@@ -9,11 +9,11 @@ export class AgentIntegrator {
   private modelName: string;
   private providerName: string;
 
-  constructor() {
-    const config = loadPresetConfig();
+  constructor(preset?: string) {
+    const config = loadPresetConfig(preset);
     this.providerName = config.provider || "google";
     this.modelName = config.defaultModel || "gemini-2.5-flash";
-    this.agents = config.agents.map(def => new ConfigurableAgent(def, undefined, this.modelName, this.providerName));
+    this.agents = config.agents.map(def => new ConfigurableAgent(def, preset, this.modelName, this.providerName));
   }
 
   async parallelProcess(input: string, context?: AgentContext): Promise<AgentResponse[]> {
@@ -235,4 +235,9 @@ Casperの直感は肯定的ですが、リスクも指摘しています。
   }
 }
 
-export const integrator = new AgentIntegrator();
+/**
+ * Factory function to create an integrator instance for a specific preset.
+ */
+export function createIntegrator(preset?: string) {
+  return new AgentIntegrator(preset);
+}

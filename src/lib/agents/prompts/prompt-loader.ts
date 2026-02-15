@@ -82,6 +82,31 @@ export function loadPresetConfig(preset?: string): PresetConfig {
 }
 
 /**
+ * List all available presets by scanning the prompts directory.
+ * Returns preset names and their config summaries.
+ */
+export function listPresets(): { name: string; config: PresetConfig }[] {
+  const promptsDir = getPromptsDir();
+  const entries = fs.readdirSync(promptsDir, { withFileTypes: true });
+  const presets: { name: string; config: PresetConfig }[] = [];
+
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    const configPath = path.join(promptsDir, entry.name, "config.json");
+    if (!fs.existsSync(configPath)) continue;
+
+    try {
+      const config = loadPresetConfig(entry.name);
+      presets.push({ name: entry.name, config });
+    } catch {
+      console.warn(`[prompt-loader] Skipping invalid preset: ${entry.name}`);
+    }
+  }
+
+  return presets;
+}
+
+/**
  * Load a prompt file from a preset folder.
  */
 export function loadPresetPrompt(filename: string, preset?: string): string {

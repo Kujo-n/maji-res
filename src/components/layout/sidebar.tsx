@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { MessageCircle, Plus, Loader2 } from "lucide-react";
 import { useChatContext } from "@/components/chat/chat-context";
+import { PresetSelector } from "@/components/preset/preset-selector";
 
 export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
   const { history, activeThreadId, selectThread, startNewChat, isLoadingHistory } = useChatContext();
@@ -25,6 +26,9 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
             </Button>
           </div>
         </div>
+        <div className="border-t border-border/40 my-2"></div>
+        <PresetSelector />
+        <div className="border-t border-border/40 my-2"></div>
         <div className="px-3 py-2">
           <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">History</h2>
           <div className="space-y-1">
