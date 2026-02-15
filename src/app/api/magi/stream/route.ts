@@ -1,8 +1,6 @@
 import { NextRequest } from "next/server";
 import { integrator } from "@/lib/agents/integrator";
 
-export const runtime = "edge";
-
 export async function POST(req: NextRequest) {
   try {
     const { message } = await req.json();

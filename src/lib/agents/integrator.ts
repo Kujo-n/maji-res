@@ -4,6 +4,7 @@ import { BalthasarAgent } from "./balthasar/balthasar-agent";
 import { CasperAgent } from "./casper/casper-agent";
 import { generateText } from "ai";
 import { google } from "@ai-sdk/google";
+import { loadPromptTemplate } from "./prompts/prompt-loader";
 
 export class AgentIntegrator {
   private agents: IAgent[];
@@ -42,23 +43,7 @@ export class AgentIntegrator {
   async synthesize(input: string, responses: AgentResponse[]): Promise<string> {
     const context = responses.map(r => `[${r.role}]: ${r.content}`).join("\n\n");
 
-    const prompt = `
-You are the MAGI System Integrator.
-You have received three distinct perspectives on the user's input:
-
-${context}
-
-User Input: "${input}"
-
-Your task is to synthesize these perspectives into a single, cohesive final response.
-1. Acknowledge the scientific facts (Melchior).
-2. Address the ethical and emotional aspects (Balthasar).
-3. Incorporate the intuitive or alternative viewpoints (Casper).
-4. Formulate a balanced conclusion.
-
-If there is a conflict, explain the trade-offs and suggest the best course of action.
-Output should be the final response to the user.
-    `.trim();
+    const prompt = loadPromptTemplate("synthesize.md", { context, input });
 
     try {
       const result = await generateText({
@@ -139,27 +124,7 @@ Casperの直感は肯定的ですが、リスクも指摘しています。
 - If 2 or more votes are DENY -> Final Verdict: DENY
 - Otherwise (or if split) -> Final Verdict: CONDITIONAL`;
 
-    const prompt = `
-You are the MAGI System Integrator.
-You have received three distinct perspectives and votes on the user's input:
-
-${context}
-
-User Input: "${input}"
-
-Your task is to synthesize these perspectives into a single, cohesive final response.
-1. Acknowledge the scientific facts (Melchior).
-2. Address the ethical and emotional aspects (Balthasar).
-3. Incorporate the intuitive or alternative viewpoints (Casper).
-4. Formulate a balanced conclusion based on the votes.
-
-${votingRules}
-
-CRITICAL: You must start your response with the calculated verdict in the exact format below, followed by a newline, and then the synthesized response.
-VERDICT: [APPROVE|DENY|CONDITIONAL]
-
-Synthesized response here...
-    `.trim();
+    const prompt = loadPromptTemplate("stream-synthesize.md", { context, input, votingRules });
 
     // Retry logic for rate limits
     const maxRetries = 3;
