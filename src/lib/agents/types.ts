@@ -8,7 +8,8 @@ export type CoreMessage =
   | { role: 'function'; content: string; name: string }
   | { role: 'tool'; content: any }; // Simplified tool content
 
-export type AgentRole = "MELCHIOR" | "BALTHASAR" | "CASPER" | "INTEGRATOR" | "OUTPUT";
+export type WellKnownRole = "MELCHIOR" | "BALTHASAR" | "CASPER" | "INTEGRATOR" | "OUTPUT";
+export type AgentRole = WellKnownRole | (string & {});
 
 export interface AgentResponse {
   content: string;

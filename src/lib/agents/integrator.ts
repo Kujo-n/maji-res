@@ -1,20 +1,15 @@
 import { IAgent, AgentResponse, AgentContext } from "./types";
-import { MelchiorAgent } from "./melchior/melchior-agent";
-import { BalthasarAgent } from "./balthasar/balthasar-agent";
-import { CasperAgent } from "./casper/casper-agent";
+import { ConfigurableAgent } from "./configurable-agent";
 import { generateText } from "ai";
 import { google } from "@ai-sdk/google";
-import { loadPromptTemplate } from "./prompts/prompt-loader";
+import { loadPromptTemplate, loadPresetConfig } from "./prompts/prompt-loader";
 
 export class AgentIntegrator {
   private agents: IAgent[];
 
   constructor() {
-    this.agents = [
-      new MelchiorAgent(),
-      new BalthasarAgent(),
-      new CasperAgent(),
-    ];
+    const config = loadPresetConfig();
+    this.agents = config.agents.map(def => new ConfigurableAgent(def));
   }
 
   async parallelProcess(input: string, context?: AgentContext): Promise<AgentResponse[]> {
@@ -114,14 +109,15 @@ Casperの直感は肯定的ですが、リスクも指摘しています。
     }).join("\n\n");
 
     // Dynamic voting rules based on consensus mode
+    const agentCount = this.agents.length;
     const votingRules = consensusMode === "unanimous" 
       ? `投票ルール (UNANIMOUS MODE - 全会一致):
-- 3人全員が APPROVE (承認) -> 最終判定: APPROVE
-- 3人全員が DENY (否認) -> 最終判定: DENY
+- ${agentCount}人全員が APPROVE (承認) -> 最終判定: APPROVE
+- ${agentCount}人全員が DENY (否認) -> 最終判定: DENY
 - それ以外 (意見の不一致) -> 最終判定: CONDITIONAL`
       : `投票ルール (MAJORITY MODE - 多数決):
-- 2人以上が APPROVE (承認) -> 最終判定: APPROVE
-- 2人以上が DENY (否認) -> 最終判定: DENY
+- 過半数が APPROVE (承認) -> 最終判定: APPROVE
+- 過半数が DENY (否認) -> 最終判定: DENY
 - それ以外 (または票が割れた場合) -> 最終判定: CONDITIONAL`;
 
     const prompt = loadPromptTemplate("stream-synthesize.md", { context, input, votingRules });
@@ -162,6 +158,7 @@ Casperの直感は肯定的ですが、リスクも指摘しています。
     return { toTextStreamResponse: () => new Response(errorStream) } as any;
   }
   calculateSyncRate(responses: AgentResponse[]): number {
+      const total = responses.length;
       let approve = 0;
       let deny = 0;
       let conditional = 0;
@@ -173,14 +170,14 @@ Casperの直感は肯定的ですが、リスクも指摘しています。
           else conditional++;
       });
 
-      // Simple calculation logic
-      // Unanimous (3-0) -> High sync (90-100%)
-      // Majority (2-1) -> Medium sync (60-80%)
-      // Chaos (1-1-1) -> Low sync (10-40%)
+      // Dynamic calculation based on agent count
+      // Unanimous -> High sync (90-100%)
+      // Majority  -> Medium sync (60-80%)
+      // Split     -> Low sync (10-40%)
       
       let baseRate = 0;
-      if (approve === 3 || deny === 3) baseRate = 96;
-      else if (approve === 2 || deny === 2) baseRate = 65;
+      if (approve === total || deny === total) baseRate = 96;
+      else if (approve > total / 2 || deny > total / 2) baseRate = 65;
       else baseRate = 25;
 
       // Add random fluctuation and confidence factor
@@ -221,7 +218,7 @@ Casperの直感は肯定的ですが、リスクも指摘しています。
         message = `${approvers[0]} と ${deniers[0]} の間で意見が対立しています。`;
       } else if (approvers.length >= 1 && deniers.length >= 1) {
         severity = "severe";
-        message = `3賢者の間で深刻な意見対立が発生しています。賛成派: ${approvers.join(", ")} / 反対派: ${deniers.join(", ")}`;
+        message = `エージェント間で深刻な意見対立が発生しています。賛成派: ${approvers.join(", ")} / 反対派: ${deniers.join(", ")}`;
       }
     }
 
