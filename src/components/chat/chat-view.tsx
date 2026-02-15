@@ -33,7 +33,7 @@ export default function ChatView() {
   };
 
   return (
-    <div className="flex h-dvh flex-col touch-manipulation">
+    <div className="flex h-full flex-col touch-manipulation">
       {/* Header with reset button */}
       {messages.length > 0 && (
         <div className="flex justify-end p-2 sm:p-3 border-b border-border/30 pt-safe">
