@@ -1,4 +1,5 @@
 {
+  "defaultModel": "gemini-2.5-flash",
   "agents": [
     { "id": "melchior", "name": "MELCHIOR", "role": "科学者", "promptFile": "melchior.md" },
     { "id": "balthasar", "name": "BALTHASAR", "role": "母", "promptFile": "balthasar.md" },

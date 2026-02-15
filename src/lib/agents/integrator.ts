@@ -6,10 +6,12 @@ import { loadPromptTemplate, loadPresetConfig } from "./prompts/prompt-loader";
 
 export class AgentIntegrator {
   private agents: IAgent[];
+  private modelName: string;
 
   constructor() {
     const config = loadPresetConfig();
-    this.agents = config.agents.map(def => new ConfigurableAgent(def));
+    this.modelName = config.defaultModel || "gemini-2.5-flash";
+    this.agents = config.agents.map(def => new ConfigurableAgent(def, undefined, this.modelName));
   }
 
   async parallelProcess(input: string, context?: AgentContext): Promise<AgentResponse[]> {
@@ -42,7 +44,7 @@ export class AgentIntegrator {
 
     try {
       const result = await generateText({
-        model: google("gemini-2.5-flash"),
+        model: google(this.modelName),
         messages: [{ role: "user", content: prompt }],
       });
       return result.text;
@@ -129,7 +131,7 @@ Casperの直感は肯定的ですが、リスクも指摘しています。
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
         return streamText({
-          model: google("gemini-2.5-flash"),
+          model: google(this.modelName),
           messages: [{ role: "user", content: prompt }],
         });
       } catch (error) {
