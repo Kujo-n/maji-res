@@ -2,7 +2,7 @@
 
 import { ChatInput } from "@/components/chat/chat-input";
 import { MessageBubble } from "@/components/chat/message-bubble";
-import { useMagiChat } from "@/hooks/use-magi-chat"; 
+import { useMagiChat } from "@/hooks/use-magi-chat";
 import { LayeredStack } from "@/components/magi/layered-stack";
 import { VerdictDisplay } from "@/components/magi/verdict-display";
 import { SyncRateDisplay } from "@/components/magi/sync-rate-display";
@@ -10,16 +10,15 @@ import { ClarificationDisplay } from "@/components/magi/clarification-display";
 import { ContradictionDisplay } from "@/components/magi/contradiction-display";
 import { useEffect, useRef, useState } from "react";
 import { ResetButton } from "@/components/magi/reset-button";
-import { ContextStaleWarning } from "@/components/magi/context-stale-warning";
 
 export default function ChatView() {
-  const { messages, agentResponses, verdict, syncRate, contradiction, isContextStale, append, reset, dismissStaleWarning, isLoading } = useMagiChat();
+  const { messages, agentResponses, verdict, syncRate, contradiction, append, reset, isLoading } = useMagiChat();
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, agentResponses, verdict]); 
+  }, [messages, agentResponses, verdict]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
@@ -54,7 +53,7 @@ export default function ChatView() {
                   <MessageBubble key={m.id} role={m.role} content={m.content} />
               );
             })}
-            
+
             {/* Display Agent Council if active (and belongs to the latest turn) */}
             {agentResponses && (
               <div className="my-4">
@@ -63,9 +62,9 @@ export default function ChatView() {
                  <VerdictDisplay verdict={verdict} />
                  {(verdict || isLoading) && (
                      <div className="w-full flex justify-center mb-6">
-                        <SyncRateDisplay 
+                        <SyncRateDisplay
                             rate={syncRate || 0}
-                            isLoading={isLoading} 
+                            isLoading={isLoading}
                         />
                      </div>
                  )}
@@ -82,7 +81,7 @@ export default function ChatView() {
                  <span className="text-xs text-muted-foreground animate-pulse font-mono">Initializing MAGI Protocol...</span>
                </div>
             )}
-            
+
             <div ref={messagesEndRef} />
           </div>
         )}
@@ -95,14 +94,6 @@ export default function ChatView() {
           isLoading={isLoading}
         />
       </div>
-      
-      {/* Context stale warning modal */}
-      {isContextStale && messages.length > 0 && (
-        <ContextStaleWarning 
-          onContinue={dismissStaleWarning} 
-          onReset={reset} 
-        />
-      )}
     </div>
   );
 }
