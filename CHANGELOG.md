@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - 環境変数 `AGENT_PRESET` によるプリセット切り替え機能。
 - `ConfigurableAgent` 汎用クラスによる動的エージェント生成。
 - `prompt-loader.ts` にエラーハンドリング・バリデーション・プリセット対応を追加。
+- `config.json` の `defaultModel` フィールドで使用LLMモデルを一括変更可能に。エージェント個別の `model` 指定によるオーバーライドにも対応。
 
 ### Changed
 - `AgentRole` 型を `WellKnownRole | (string & {})` に変更し、拡張性を確保。

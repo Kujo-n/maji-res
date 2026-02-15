@@ -77,6 +77,27 @@ npm run dev
 
 ブラウザで [http://localhost:3000](http://localhost:3000) にアクセスしてください。
 
+### エージェント設定のカスタマイズ
+
+エージェントの定義は `src/lib/agents/prompts/<プリセット名>/config.json` で管理されています。
+
+```json
+{
+  "defaultModel": "gemini-2.5-flash",
+  "agents": [
+    { "id": "melchior", "name": "MELCHIOR", "role": "科学者", "promptFile": "melchior.md" },
+    { "id": "balthasar", "name": "BALTHASAR", "role": "母", "promptFile": "balthasar.md" },
+    { "id": "casper", "name": "CASPER", "role": "女", "promptFile": "casper.md", "model": "gemini-2.5-pro" }
+  ]
+}
+```
+
+| フィールド | 説明 |
+|---|---|
+| `defaultModel` | 全エージェント・Integratorが使用するデフォルトモデル |
+| `agents[].model` | エージェント個別のモデル指定（`defaultModel`を上書き） |
+| `agents[].promptFile` | 同フォルダ内のプロンプトMarkdownファイル名 |
+
 ## テスト
 
 ```bash
