@@ -8,7 +8,7 @@ MAJI-RES は、3つの異なる人格を持つAIエージェント（Melchior, B
 
 ### 特徴
 
-- 🧠 **3賢者エージェント**:
+- 🧠 **3賢者エージェント**（設定でカスタマイズ可能）:
   - **MELCHIOR (科学者)**: 論理的・客観的な視点。
   - **BALTHASAR (母)**: 倫理的・道徳的な視点。
   - **CASPER (女)**: 直感的・側面的視点。
@@ -20,7 +20,7 @@ MAJI-RES は、3つの異なる人格を持つAIエージェント（Melchior, B
 ## 技術スタック
 
 - **Frontend**: Next.js 15 (App Router), React, Tailwind CSS, Shadcn/UI
-- **AI/LLM**: Vercel AI SDK, Google Gemini 1.5 Pro/Flash
+- **AI/LLM**: Vercel AI SDK, Google Gemini 2.5 Flash
 - **Backend/DB**: Firebase (Firestore, Auth)
 - **Deployment**: Vercel
 - **Testing**: Playwright (E2E)
@@ -64,6 +64,9 @@ NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
 FIREBASE_SERVICE_ACCOUNT_PROJECT_ID=...
 FIREBASE_SERVICE_ACCOUNT_CLIENT_EMAIL=...
 FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY=...
+
+# Agent Preset (エージェント設定プリセット)
+AGENT_PRESET=default
 ```
 
 ### 開発サーバー起動

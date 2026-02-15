@@ -32,15 +32,18 @@ graph TD
 
 ## Agent System Logic
 
-MAJI-RES の中核となる「3賢者システム」の内部ロジックです。
+MAJI-RES の中核となるエージェントシステムの内部ロジックです。
+
+> **Note**: エージェントの構成は `src/lib/agents/prompts/<preset>/config.json` で定義されており、
+> 環境変数 `AGENT_PRESET` でプリセットを切り替えることで、エージェントの名前・ロール・プロンプトを変更できます。
 
 ```mermaid
 sequenceDiagram
     participant U as User
     participant O as Orchestrator
     participant M as Melchior (Science)
-    participant B as Balthasar (Code)
-    participant C as Casper (Woman)
+    participant B as Balthasar (Ethics)
+    participant C as Casper (Intuition)
     participant I as Integrator
     participant DB as Firestore
 
@@ -128,6 +131,19 @@ flowchart LR
 ```
 
 ### 3. Persistence (Firestore Structure)
+
+```
+users/{userId}/
+  threads/{threadId}/
+    title: string
+    createdAt: Timestamp
+    updatedAt: Timestamp
+    messages/{messageId}/
+      role: "user" | "assistant"
+      content: string
+      timestamp: Timestamp
+      metadata?: { syncRate, decision, agentResponses }
+```
 
 ## PWA & Offline Strategy
 
