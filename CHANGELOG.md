@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 - `ConfigurableAgent` 汎用クラスによる動的エージェント生成。
 - `prompt-loader.ts` にエラーハンドリング・バリデーション・プリセット対応を追加。
 - `config.json` の `defaultModel` フィールドで使用LLMモデルを一括変更可能に。エージェント個別の `model` 指定によるオーバーライドにも対応。
+- マルチプロバイダー対応: `config.json` の `provider` フィールドで Google / OpenAI / Anthropic を切り替え可能に。
 
 ### Changed
 - `AgentRole` 型を `WellKnownRole | (string & {})` に変更し、拡張性を確保。

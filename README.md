@@ -83,20 +83,30 @@ npm run dev
 
 ```json
 {
+  "provider": "google",
   "defaultModel": "gemini-2.5-flash",
   "agents": [
     { "id": "melchior", "name": "MELCHIOR", "role": "科学者", "promptFile": "melchior.md" },
     { "id": "balthasar", "name": "BALTHASAR", "role": "母", "promptFile": "balthasar.md" },
-    { "id": "casper", "name": "CASPER", "role": "女", "promptFile": "casper.md", "model": "gemini-2.5-pro" }
+    { "id": "casper", "name": "CASPER", "role": "女", "promptFile": "casper.md" }
   ]
 }
 ```
 
 | フィールド | 説明 |
 |---|---|
+| `provider` | LLMプロバイダー (`google` / `openai` / `anthropic`) |
 | `defaultModel` | 全エージェント・Integratorが使用するデフォルトモデル |
 | `agents[].model` | エージェント個別のモデル指定（`defaultModel`を上書き） |
 | `agents[].promptFile` | 同フォルダ内のプロンプトMarkdownファイル名 |
+
+**プロバイダー別の環境変数:**
+
+| プロバイダー | 環境変数 |
+|---|---|
+| `google` | `GOOGLE_GENERATIVE_AI_API_KEY` |
+| `openai` | `OPENAI_API_KEY` |
+| `anthropic` | `ANTHROPIC_API_KEY` |
 
 ## テスト
 
