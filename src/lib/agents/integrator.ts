@@ -115,14 +115,14 @@ Casperの直感は肯定的ですが、リスクも指摘しています。
 
     // Dynamic voting rules based on consensus mode
     const votingRules = consensusMode === "unanimous" 
-      ? `Voting Rules (UNANIMOUS MODE - 全会一致):
-- All 3 votes must be APPROVE -> Final Verdict: APPROVE
-- All 3 votes must be DENY -> Final Verdict: DENY
-- Otherwise (any disagreement) -> Final Verdict: CONDITIONAL`
-      : `Voting Rules (MAJORITY MODE - 多数決):
-- If 2 or more votes are APPROVE -> Final Verdict: APPROVE
-- If 2 or more votes are DENY -> Final Verdict: DENY
-- Otherwise (or if split) -> Final Verdict: CONDITIONAL`;
+      ? `投票ルール (UNANIMOUS MODE - 全会一致):
+- 3人全員が APPROVE (承認) -> 最終判定: APPROVE
+- 3人全員が DENY (否認) -> 最終判定: DENY
+- それ以外 (意見の不一致) -> 最終判定: CONDITIONAL`
+      : `投票ルール (MAJORITY MODE - 多数決):
+- 2人以上が APPROVE (承認) -> 最終判定: APPROVE
+- 2人以上が DENY (否認) -> 最終判定: DENY
+- それ以外 (または票が割れた場合) -> 最終判定: CONDITIONAL`;
 
     const prompt = loadPromptTemplate("stream-synthesize.md", { context, input, votingRules });
 
