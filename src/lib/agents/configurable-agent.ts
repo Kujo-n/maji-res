@@ -10,8 +10,8 @@ export class ConfigurableAgent extends BaseAgent {
   private promptFile: string;
   private preset?: string;
 
-  constructor(definition: AgentDefinition, preset?: string, defaultModel?: string) {
-    super(definition.name, definition.name as AgentRole, definition.model || defaultModel);
+  constructor(definition: AgentDefinition, preset?: string, defaultModel?: string, defaultProvider?: string) {
+    super(definition.name, definition.name as AgentRole, definition.model || defaultModel, defaultProvider);
     this.promptFile = definition.promptFile;
     this.preset = preset;
   }

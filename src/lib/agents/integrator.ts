@@ -1,17 +1,19 @@
 import { IAgent, AgentResponse, AgentContext } from "./types";
 import { ConfigurableAgent } from "./configurable-agent";
 import { generateText } from "ai";
-import { google } from "@ai-sdk/google";
+import { resolveModel } from "./provider-resolver";
 import { loadPromptTemplate, loadPresetConfig } from "./prompts/prompt-loader";
 
 export class AgentIntegrator {
   private agents: IAgent[];
   private modelName: string;
+  private providerName: string;
 
   constructor() {
     const config = loadPresetConfig();
+    this.providerName = config.provider || "google";
     this.modelName = config.defaultModel || "gemini-2.5-flash";
-    this.agents = config.agents.map(def => new ConfigurableAgent(def, undefined, this.modelName));
+    this.agents = config.agents.map(def => new ConfigurableAgent(def, undefined, this.modelName, this.providerName));
   }
 
   async parallelProcess(input: string, context?: AgentContext): Promise<AgentResponse[]> {
@@ -44,7 +46,7 @@ export class AgentIntegrator {
 
     try {
       const result = await generateText({
-        model: google(this.modelName),
+        model: resolveModel(this.providerName, this.modelName),
         messages: [{ role: "user", content: prompt }],
       });
       return result.text;
@@ -131,7 +133,7 @@ Casperの直感は肯定的ですが、リスクも指摘しています。
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
         return streamText({
-          model: google(this.modelName),
+          model: resolveModel(this.providerName, this.modelName),
           messages: [{ role: "user", content: prompt }],
         });
       } catch (error) {

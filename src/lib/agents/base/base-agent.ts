@@ -1,16 +1,18 @@
 import { IAgent, AgentRole, AgentResponse, AgentContext, CoreMessage } from "../types";
 import { generateText } from "ai";
-import { google } from "@ai-sdk/google";
+import { resolveModel } from "../provider-resolver";
 
 export abstract class BaseAgent implements IAgent {
   name: string;
   role: AgentRole;
   modelName: string = "gemini-2.5-flash";
+  providerName: string = "google";
 
-  constructor(name: string, role: AgentRole, modelName?: string) {
+  constructor(name: string, role: AgentRole, modelName?: string, providerName?: string) {
     this.name = name;
     this.role = role;
     if (modelName) this.modelName = modelName;
+    if (providerName) this.providerName = providerName;
   }
 
   /**
@@ -70,7 +72,7 @@ export abstract class BaseAgent implements IAgent {
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
         const result = await generateText({
-          model: google(this.modelName),
+          model: resolveModel(this.providerName, this.modelName),
           messages,
         });
 

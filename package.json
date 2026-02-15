@@ -12,7 +12,9 @@
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.44",
     "@ai-sdk/google": "^3.0.22",
+    "@ai-sdk/openai": "^3.0.29",
     "@ai-sdk/react": "^3.0.79",
     "ai": "^6.0.77",
     "class-variance-authority": "^0.7.1",

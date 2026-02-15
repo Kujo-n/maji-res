@@ -15,6 +15,7 @@ export interface AgentDefinition {
 }
 
 export interface PresetConfig {
+  provider?: string;
   defaultModel?: string;
   agents: AgentDefinition[];
 }
