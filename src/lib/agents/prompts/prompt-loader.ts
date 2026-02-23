@@ -20,6 +20,43 @@ export interface PresetConfig {
   agents: AgentDefinition[];
 }
 
+// --- Sanitization ---
+
+/**
+ * Sanitize a name to prevent path traversal attacks.
+ * Only allows alphanumeric characters, hyphens, and underscores.
+ */
+function sanitizeName(name: string, label: string): string {
+  if (!name || typeof name !== "string") {
+    throw new Error(`不正な${label}: 空または無効な値です。`);
+  }
+  if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
+    throw new Error(`不正な${label}: "${name}" に使用できない文字が含まれています。`);
+  }
+  if (name.includes("..")) {
+    throw new Error(`不正な${label}: パストラバーサルが検出されました。`);
+  }
+  return name;
+}
+
+/**
+ * Sanitize a filename to prevent path traversal.
+ * Allows alphanumeric, hyphens, underscores, and dots (for extensions).
+ * Rejects paths containing directory separators or "..".
+ */
+function sanitizeFilename(filename: string): string {
+  if (!filename || typeof filename !== "string") {
+    throw new Error("不正なファイル名: 空または無効な値です。");
+  }
+  if (filename.includes("..") || filename.includes("/") || filename.includes("\\")) {
+    throw new Error(`不正なファイル名: "${filename}" にパストラバーサルが検出されました。`);
+  }
+  if (!/^[a-zA-Z0-9_-]+\.[a-zA-Z0-9]+$/.test(filename)) {
+    throw new Error(`不正なファイル名: "${filename}" の形式が無効です。`);
+  }
+  return filename;
+}
+
 // --- Validation ---
 
 function validateConfig(raw: unknown): PresetConfig {
@@ -35,6 +72,8 @@ function validateConfig(raw: unknown): PresetConfig {
         `プリセット設定が不正です: エージェント定義に必須フィールド (id, name, promptFile) が不足しています。`
       );
     }
+    // Validate promptFile to prevent path traversal
+    sanitizeFilename(agent.promptFile);
   }
 
   return config;
@@ -62,7 +101,7 @@ function getPromptsDir(): string {
  * Parsed result is cached to avoid repeated JSON.parse calls.
  */
 export function loadPresetConfig(preset?: string): PresetConfig {
-  const presetName = preset || getActivePreset();
+  const presetName = sanitizeName(preset || getActivePreset(), "プリセット名");
 
   if (configCache.has(presetName)) {
     return configCache.get(presetName)!;
@@ -110,7 +149,8 @@ export function listPresets(): { name: string; config: PresetConfig }[] {
  * Load a prompt file from a preset folder.
  */
 export function loadPresetPrompt(filename: string, preset?: string): string {
-  const presetName = preset || getActivePreset();
+  const presetName = sanitizeName(preset || getActivePreset(), "プリセット名");
+  sanitizeFilename(filename);
   const cacheKey = `${presetName}/${filename}`;
 
   if (promptCache.has(cacheKey)) {

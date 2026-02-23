@@ -73,10 +73,14 @@ export async function POST(req: NextRequest) {
 
   } catch (error: unknown) {
     console.error("MAGI Stream API Error:", error);
+    const isDev = process.env.NODE_ENV !== "production";
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     const errorStack = error instanceof Error ? error.stack : undefined;
     
-    return new Response(JSON.stringify({ error: "Failed to process request", details: errorMessage, stack: errorStack }), {
+    return new Response(JSON.stringify({
+      error: "Failed to process request",
+      ...(isDev && { details: errorMessage, stack: errorStack }),
+    }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
     });
