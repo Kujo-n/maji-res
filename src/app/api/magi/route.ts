@@ -16,6 +16,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const MAX_MESSAGE_LENGTH = 10_000;
+    if (message.length > MAX_MESSAGE_LENGTH) {
+      return NextResponse.json(
+        { error: `Message exceeds maximum length of ${MAX_MESSAGE_LENGTH} characters` },
+        { status: 400 }
+      );
+    }
+
     // Process through MAGI system
     const result = await orchestrator.process(message);
 

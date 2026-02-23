@@ -20,8 +20,8 @@
 - [x] スタックトレース漏洩防止 — `stream/route.ts` で本番環境では内部情報を除外
 
 ## Phase 2: 中程度（推奨修正）
-- [ ] メッセージ長の制限 — `stream/route.ts`, `magi/route.ts` に最大文字数チェック追加
-- [ ] promptFile パストラバーサル対策 — `validateConfig` 内で `..` を含まないことを検証
+- [x] メッセージ長の制限 — `stream/route.ts`, `magi/route.ts` に最大文字数チェック追加
+- [x] promptFile パストラバーサル対策 — `validateConfig` 内で `..` を含まないことを検証（Phase 1 で実装済み）
 
 ## Phase 3: 低（改善推奨・将来対応）
 - [ ] APIレート制限 — Next.js ミドルウェアでIPベースの制限
