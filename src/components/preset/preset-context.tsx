@@ -12,7 +12,7 @@ interface PresetContextType {
 const PresetContext = createContext<PresetContextType | undefined>(undefined);
 
 export function PresetProvider({ children }: { children: React.ReactNode }) {
-  const [preset, setPresetState] = useState("default");
+  const [preset, setPresetState] = useState("MAGI");
   const [availablePresets, setAvailablePresets] = useState<{ name: string; config: any }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 

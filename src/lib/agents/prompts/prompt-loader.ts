@@ -47,7 +47,7 @@ function validateConfig(raw: unknown): PresetConfig {
  * Defaults to "default" if not set.
  */
 function getActivePreset(): string {
-  return process.env.AGENT_PRESET || "default";
+  return process.env.AGENT_PRESET || "MAGI";
 }
 
 /**
