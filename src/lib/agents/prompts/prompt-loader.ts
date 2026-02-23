@@ -163,3 +163,15 @@ export function loadPromptTemplate(filename: string, variables: Record<string, s
   }
   return content;
 }
+
+/**
+ * Load a prompt template from a preset folder and replace placeholder variables.
+ * Placeholders use the format: {{key}}
+ */
+export function loadPresetPromptTemplate(filename: string, variables: Record<string, string>, preset?: string): string {
+  let content = loadPresetPrompt(filename, preset);
+  for (const [key, value] of Object.entries(variables)) {
+    content = content.replaceAll(`{{${key}}}`, value);
+  }
+  return content;
+}

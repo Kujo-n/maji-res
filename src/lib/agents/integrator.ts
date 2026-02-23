@@ -2,15 +2,17 @@ import { IAgent, AgentResponse, AgentContext } from "./types";
 import { ConfigurableAgent } from "./configurable-agent";
 import { generateText } from "ai";
 import { resolveModel } from "./provider-resolver";
-import { loadPromptTemplate, loadPresetConfig } from "./prompts/prompt-loader";
+import { loadPresetPromptTemplate, loadPresetConfig } from "./prompts/prompt-loader";
 
 export class AgentIntegrator {
   private agents: IAgent[];
   private modelName: string;
   private providerName: string;
+  private preset?: string;
 
   constructor(preset?: string) {
     const config = loadPresetConfig(preset);
+    this.preset = preset;
     this.providerName = config.provider || "google";
     this.modelName = config.defaultModel || "gemini-2.5-flash";
     this.agents = config.agents.map(def => new ConfigurableAgent(def, preset, this.modelName, this.providerName));
@@ -42,7 +44,7 @@ export class AgentIntegrator {
   async synthesize(input: string, responses: AgentResponse[]): Promise<string> {
     const context = responses.map(r => `[${r.role}]: ${r.content}`).join("\n\n");
 
-    const prompt = loadPromptTemplate("synthesize.md", { context, input });
+    const prompt = loadPresetPromptTemplate("synthesize.md", { context, input }, this.preset);
 
     try {
       const result = await generateText({
@@ -124,7 +126,7 @@ Casperの直感は肯定的ですが、リスクも指摘しています。
 - 過半数が DENY (否認) -> 最終判定: DENY
 - それ以外 (または票が割れた場合) -> 最終判定: CONDITIONAL`;
 
-    const prompt = loadPromptTemplate("stream-synthesize.md", { context, input, votingRules });
+    const prompt = loadPresetPromptTemplate("stream-synthesize.md", { context, input, votingRules }, this.preset);
 
     // Retry logic for rate limits
     const maxRetries = 3;

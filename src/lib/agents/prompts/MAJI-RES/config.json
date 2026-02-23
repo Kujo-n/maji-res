@@ -1,0 +1,9 @@
+{
+  "provider": "google",
+  "defaultModel": "gemini-2.5-flash",
+  "agents": [
+    { "id": "melchior", "name": "MELCHIOR", "role": "肯定的視点", "promptFile": "melchior.md" },
+    { "id": "balthasar", "name": "BALTHASAR", "role": "批判的視点", "promptFile": "balthasar.md" },
+    { "id": "casper", "name": "CASPER", "role": "中立的視点", "promptFile": "casper.md" }
+  ]
+}
