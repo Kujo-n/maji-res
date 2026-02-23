@@ -36,3 +36,18 @@
 - 【未決の論点/逆質問】:
   - [Agent Bが提示した最新の問い]
 - 【最終更新日時】: [168時間タイマー開始点]
+
+## プリセット構成
+
+統合プロンプト（`synthesize.md`, `stream-synthesize.md`）はプリセットごとに個別定義されています。
+これにより、プリセットのエージェント役割に応じた最適な統合指示を設定できます。
+
+```
+src/lib/agents/prompts/
+├── <preset>/
+│   ├── config.json             # エージェント定義
+│   ├── <agent>.md              # 各エージェントのプロンプト
+│   ├── synthesize.md           # 非ストリーミング統合プロンプト
+│   └── stream-synthesize.md    # ストリーミング統合プロンプト
+└── prompt-loader.ts            # 共有ローダーロジック
+```

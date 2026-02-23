@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] - 2026-02-24
+
+### Added
+- 新プリセット `MAJI-RES`（肯定的・批判的・中立的の3視点構成）を追加。
+- `prompt-loader.ts` に `loadPresetPromptTemplate` 関数を追加。
+
+### Changed
+- 統合プロンプト（`synthesize.md`, `stream-synthesize.md`）を共有ファイルから各プリセットフォルダへ移動し、プリセットごとに個別定義する構成に変更。
+- `integrator.ts` をプリセット対応の統合プロンプト読み込みに変更。
+- デフォルトプリセットフォルダ名を `default` → `MAGI` に変更。
+
 ## [1.2.0] - 2026-02-15
 
 ### Added
