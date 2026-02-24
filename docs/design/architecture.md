@@ -143,8 +143,11 @@ users/{userId}/
     messages/{messageId}/
       role: "user" | "assistant"
       content: string
-      timestamp: Timestamp
-      metadata?: { syncRate, decision, agentResponses }
+      createdAt: Timestamp
+      verdict?: "APPROVE" | "DENY" | "CONDITIONAL"
+      agentResponses?: AgentResponse[]
+      syncRate?: number
+      contradiction?: ContradictionInfo
 ```
 
 ## PWA & Offline Strategy

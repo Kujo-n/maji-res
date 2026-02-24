@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.1] - 2026-02-24
+
+### Fixed
+- チャット送信時にMELCHIOR/BALTHASAR/CASPERの回答・VERDICT・シンクロ率が消える不具合を修正。MAGI審議情報を各アシスタントメッセージに紐づけて永続表示する構造に変更。
+
+### Changed
+- `Message` 型に `syncRate`, `contradiction` フィールドを追加。
+- `ContradictionInfo` 型を `types/index.ts` に共通定義し、`contradiction-display.tsx` および `chat-service.ts` から参照（DRY原則）。
+- MAGI審議結果の表示ロジックを `MagiDeliberation` コンポーネント（`React.memo`）に抽出。
+- `useMagiChat` のトップレベルステートを6個→2個に削減し、派生データは `useMemo` で導出。
+- `ChatService` で `syncRate`/`contradiction` をFirestoreに永続化。
+
+### Added
+- `findLastAssistantMessage` 純粋関数のユニットテスト（5ケース）。
+
 ## [1.3.0] - 2026-02-24
 
 ### Added
