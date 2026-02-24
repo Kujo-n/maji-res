@@ -114,9 +114,15 @@ export function useMagiChat() {
     }
 
     try {
+      // Get Firebase Auth ID token for API authentication
+      const idToken = await user.getIdToken();
+
       const response = await fetch("/api/magi/stream", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${idToken}`,
+        },
         body: JSON.stringify({ message: message.content, preset }),
       });
 

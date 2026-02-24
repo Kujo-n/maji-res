@@ -24,5 +24,5 @@
 - [x] promptFile パストラバーサル対策 — `validateConfig` 内で `..` を含まないことを検証（Phase 1 で実装済み）
 
 ## Phase 3: 低（改善推奨・将来対応）
-- [ ] APIレート制限 — Next.js ミドルウェアでIPベースの制限
-- [ ] API認証 — Firebase Auth トークン検証
+- [x] APIレート制限 — `rate-limiter.ts` でIPベースの制限（10req/min）
+- [x] API認証 — `auth-guard.ts` で Firebase Auth トークン検証

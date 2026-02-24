@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { MagiOrchestrator } from "@/lib/agents/orchestrator";
+import { checkRateLimit } from "@/lib/security/rate-limiter";
+import { verifyAuth } from "@/lib/security/auth-guard";
 
 export const maxDuration = 60; // Allow longer execution for multiple agents
 
 const orchestrator = new MagiOrchestrator();
 
 export async function POST(req: NextRequest) {
+  // Rate limit check
+  const rateLimitResponse = checkRateLimit(req, { maxRequests: 10, windowMs: 60_000 });
+  if (rateLimitResponse) return rateLimitResponse;
+
+  // Authentication check
+  const authResult = await verifyAuth(req);
+  if (authResult instanceof Response) return authResult;
+
   try {
     const { message, includeDetails } = await req.json();
 

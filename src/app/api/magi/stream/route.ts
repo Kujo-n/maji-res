@@ -1,7 +1,17 @@
 import { NextRequest } from "next/server";
 import { createIntegrator } from "@/lib/agents/integrator";
+import { checkRateLimit } from "@/lib/security/rate-limiter";
+import { verifyAuth } from "@/lib/security/auth-guard";
 
 export async function POST(req: NextRequest) {
+  // Rate limit check
+  const rateLimitResponse = checkRateLimit(req, { maxRequests: 10, windowMs: 60_000 });
+  if (rateLimitResponse) return rateLimitResponse;
+
+  // Authentication check
+  const authResult = await verifyAuth(req);
+  if (authResult instanceof Response) return authResult;
+
   try {
     const { message, preset } = await req.json();
 
