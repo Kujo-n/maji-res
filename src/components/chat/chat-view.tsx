@@ -3,11 +3,7 @@
 import { ChatInput } from "@/components/chat/chat-input";
 import { MessageBubble } from "@/components/chat/message-bubble";
 import { useMagiChat } from "@/hooks/use-magi-chat";
-import { LayeredStack } from "@/components/magi/layered-stack";
-import { VerdictDisplay } from "@/components/magi/verdict-display";
-import { SyncRateDisplay } from "@/components/magi/sync-rate-display";
-import { ClarificationDisplay } from "@/components/magi/clarification-display";
-import { ContradictionDisplay } from "@/components/magi/contradiction-display";
+import { MagiDeliberation } from "@/components/magi/magi-deliberation";
 import { useEffect, useRef, useState } from "react";
 import { ResetButton } from "@/components/magi/reset-button";
 
@@ -48,34 +44,16 @@ export default function ChatView() {
           </div>
         ) : (
           <div className="flex flex-col gap-6 pb-4">
-            {messages.map((m) => {
-              return (
-                <div key={m.id}>
-                  <MessageBubble role={m.role} content={m.content} />
-                  {/* 各アシスタントメッセージに紐づくMAGI審議結果を表示 */}
-                  {m.role === "assistant" && m.agentResponses && (
-                    <div className="my-4">
-                      <div className="text-xs text-muted-foreground mb-2 text-center font-mono">--- MAGI DELIBERATION ---</div>
-                      <LayeredStack responses={m.agentResponses} />
-                      <VerdictDisplay verdict={m.verdict ?? null} />
-                      {m.verdict && (
-                        <div className="w-full flex justify-center mb-6">
-                          <SyncRateDisplay
-                            rate={m.syncRate || 0}
-                            isLoading={false}
-                          />
-                        </div>
-                      )}
-                      <ClarificationDisplay responses={m.agentResponses} />
-                      <ContradictionDisplay contradiction={m.contradiction ?? null} />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+            {messages.map((m) => (
+              <div key={m.id}>
+                <MessageBubble role={m.role} content={m.content} />
+                {m.role === "assistant" && (
+                  <MagiDeliberation message={m} />
+                )}
+              </div>
+            ))}
 
             {isLoading && !agentResponses && (
-               // Simple loading before agents return
                <div className="flex justify-center py-4">
                  <span className="text-xs text-muted-foreground animate-pulse font-mono">Initializing MAGI Protocol...</span>
                </div>
@@ -96,3 +74,4 @@ export default function ChatView() {
     </div>
   );
 }
+

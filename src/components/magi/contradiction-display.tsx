@@ -1,13 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { ContradictionInfo } from "@/lib/types";
 
-interface ContradictionInfo {
-  hasContradiction: boolean;
-  conflictingAgents: { approve: string[]; deny: string[] };
-  severity: "none" | "mild" | "severe";
-  message?: string;
-}
 
 interface ContradictionDisplayProps {
   contradiction: ContradictionInfo | null;

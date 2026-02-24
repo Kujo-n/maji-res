@@ -12,7 +12,7 @@ import {
   updateDoc,
   FieldValue
 } from "firebase/firestore";
-import { Message } from "@/lib/types";
+import { Message, ContradictionInfo } from "@/lib/types";
 import { AgentResponse } from "@/lib/agents/types";
 
 // Define Firestore data shapes
@@ -31,7 +31,7 @@ export interface MessageData {
     verdict?: "APPROVE" | "DENY" | "CONDITIONAL";
     agentResponses?: AgentResponse[];
     syncRate?: number;
-    contradiction?: object;
+    contradiction?: ContradictionInfo;
     createdAt: Timestamp;
 }
 
@@ -42,7 +42,7 @@ interface MessagePayload {
     verdict?: "APPROVE" | "DENY" | "CONDITIONAL";
     agentResponses?: AgentResponse[];
     syncRate?: number;
-    contradiction?: object;
+    contradiction?: ContradictionInfo;
     createdAt: FieldValue;
 }
 
