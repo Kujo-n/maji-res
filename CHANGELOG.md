@@ -7,11 +7,20 @@ All notable changes to this project will be documented in this file.
 ### Added
 - 新プリセット `MAJI-RES`（肯定的・批判的・中立的の3視点構成）を追加。
 - `prompt-loader.ts` に `loadPresetPromptTemplate` 関数を追加。
+- `rate-limiter.ts`: IPベースのAPIレート制限（10req/min）を追加。
+- `auth-guard.ts`: Firebase Auth IDトークンによるAPI認証を追加。
 
 ### Changed
 - 統合プロンプト（`synthesize.md`, `stream-synthesize.md`）を共有ファイルから各プリセットフォルダへ移動し、プリセットごとに個別定義する構成に変更。
 - `integrator.ts` をプリセット対応の統合プロンプト読み込みに変更。
 - デフォルトプリセットフォルダ名を `default` → `MAGI` に変更。
+
+### Security
+- パストラバーサル対策: プリセット名・ファイル名のサニタイズ関数を追加（`sanitizeName`, `sanitizeFilename`）。
+- スタックトレース漏洩防止: 本番環境でエラー詳細をレスポンスから除外。
+- メッセージ長制限: API入力を最大10,000文字に制限。
+- APIレート制限: IPアドレスごとの リクエスト数制限を導入。
+- API認証: Firebase Auth IDトークン検証を全APIルートに適用。
 
 ## [1.2.0] - 2026-02-15
 

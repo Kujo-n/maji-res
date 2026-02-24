@@ -159,3 +159,26 @@ users/{userId}/
 - **Send**: Medium vibration
 - **Verdict (Approve)**: Success pattern (Triple pulse)
 - **Verdict (Deny)**: Error pattern (Double pulse)
+
+## Security
+
+APIエンドポイントに対する多層防御を実装。
+
+```mermaid
+flowchart LR
+    Req["Client Request"] --> RL["Rate Limiter<br/>(10req/min per IP)"]
+    RL -->|Pass| Auth["Auth Guard<br/>(Firebase ID Token)"]
+    RL -->|Reject| R429["429 Too Many Requests"]
+    Auth -->|Pass| Val["Input Validation<br/>(type, length, sanitize)"]
+    Auth -->|Reject| R401["401 Unauthorized"]
+    Val -->|Pass| API["API Handler"]
+    Val -->|Reject| R400["400 Bad Request"]
+```
+
+| レイヤー | 実装 | 内容 |
+|:---|:---|:---|
+| **レート制限** | `rate-limiter.ts` | IP+パスごとに 10req/min（インメモリ） |
+| **認証** | `auth-guard.ts` | Firebase Auth IDトークン検証 |
+| **入力検証** | 各 API route | メッセージ型・長さ（10,000文字上限） |
+| **パストラバーサル防止** | `prompt-loader.ts` | プリセット名・ファイル名のサニタイズ |
+| **情報漏洩防止** | `stream/route.ts` | 本番環境でスタックトレースを除外 |
