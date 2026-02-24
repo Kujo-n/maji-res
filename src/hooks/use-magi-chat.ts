@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { AgentResponse } from "@/lib/agents/types";
 
 import { ChatService } from "@/lib/services/chat-service";
@@ -26,16 +26,22 @@ export function useMagiChat() {
   const { preset } = usePreset();
 
   const [messages, setMessages] = useState<Message[]>([]);
-  const [agentResponses, setAgentResponses] = useState<AgentResponse[] | null>(null);
-  const [verdict, setVerdict] = useState<"APPROVE" | "DENY" | "CONDITIONAL" | null>(null);
-  const [syncRate, setSyncRate] = useState<number | null>(null);
-  const [contradiction, setContradiction] = useState<{
-    hasContradiction: boolean;
-    conflictingAgents: { approve: string[]; deny: string[] };
-    severity: "none" | "mild" | "severe";
-    message?: string;
-  } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // ---------------------------------------------------------------------------
+  // 最新のアシスタントメッセージからMAGI情報を導出
+  // ---------------------------------------------------------------------------
+  const lastAssistant = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === "assistant") return messages[i];
+    }
+    return null;
+  }, [messages]);
+
+  const agentResponses = lastAssistant?.agentResponses ?? null;
+  const verdict = lastAssistant?.verdict ?? null;
+  const syncRate = lastAssistant?.syncRate ?? null;
+  const contradiction = lastAssistant?.contradiction ?? null;
 
   // ---------------------------------------------------------------------------
   // スレッド読み込み: activeThreadId が変わったら対応するメッセージをロード
@@ -45,14 +51,6 @@ export function useMagiChat() {
     try {
       const msgs = await ChatService.getThreadMessages(user.uid, threadId);
       setMessages(msgs);
-      // 最後のアシスタントメッセージから状態を復元
-      if (msgs.length > 0) {
-        const lastMsg = msgs[msgs.length - 1];
-        if (lastMsg.role === "assistant") {
-          if (lastMsg.verdict) setVerdict(lastMsg.verdict);
-          if (lastMsg.agentResponses) setAgentResponses(lastMsg.agentResponses);
-        }
-      }
     } catch (e) {
       console.error("Failed to load thread:", e);
       toast.error("チャット履歴の読み込みに失敗しました");
@@ -69,10 +67,6 @@ export function useMagiChat() {
     } else {
       // 新規チャット状態 → すべてクリア
       setMessages([]);
-      setAgentResponses(null);
-      setVerdict(null);
-      setSyncRate(null);
-      setContradiction(null);
     }
   }, [activeThreadId, user, loadThread]);
 
@@ -102,10 +96,6 @@ export function useMagiChat() {
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    setAgentResponses(null);
-    setVerdict(null);
-    setSyncRate(null);
-    setContradiction(null);
     setIsLoading(true);
 
     // ユーザーメッセージを保存
@@ -168,7 +158,6 @@ export function useMagiChat() {
               const verdictMatch = buffer.match(/^VERDICT: (APPROVE|DENY|CONDITIONAL)\n?/);
               if (verdictMatch) {
                 const v = verdictMatch[1] as "APPROVE" | "DENY" | "CONDITIONAL";
-                setVerdict(v);
                 assistantMessage.verdict = v;
                 verdictFound = true;
                 text = buffer.substring(verdictMatch[0].length);
@@ -197,15 +186,20 @@ export function useMagiChat() {
                 const payload = data[0];
                 if (payload) {
                   if (payload.agentResponses) {
-                    setAgentResponses(payload.agentResponses);
                     assistantMessage.agentResponses = payload.agentResponses;
                   }
                   if (typeof payload.syncRate === "number") {
-                    setSyncRate(payload.syncRate);
+                    assistantMessage.syncRate = payload.syncRate;
                   }
                   if (payload.contradiction) {
-                    setContradiction(payload.contradiction);
+                    assistantMessage.contradiction = payload.contradiction;
                   }
+                  // メッセージ状態を更新（MAGI情報を反映）
+                  setMessages((prev) => {
+                    const newMessages = [...prev];
+                    newMessages[newMessages.length - 1] = { ...assistantMessage };
+                    return newMessages;
+                  });
                 }
               }
             } catch (e) { console.error(e); }
@@ -226,8 +220,8 @@ export function useMagiChat() {
             message.content,
             assistantMessage.agentResponses,
             assistantMessage.verdict,
-            syncRate || 0,
-            contradiction || { hasContradiction: false, severity: "none" as const }
+            assistantMessage.syncRate || 0,
+            assistantMessage.contradiction || { hasContradiction: false, severity: "none" as const }
           ).catch((e) => {
             console.error("Failed to save decision:", e);
             toast.error("判定履歴の保存に失敗しました");
@@ -255,10 +249,6 @@ export function useMagiChat() {
   // ---------------------------------------------------------------------------
   const reset = useCallback(() => {
     setMessages([]);
-    setAgentResponses(null);
-    setVerdict(null);
-    setSyncRate(null);
-    setContradiction(null);
     setActiveThreadId(null);
   }, [setActiveThreadId]);
 

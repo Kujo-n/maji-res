@@ -7,5 +7,12 @@ export interface Message {
   content: string;
   verdict?: "APPROVE" | "DENY" | "CONDITIONAL";
   agentResponses?: AgentResponse[];
+  syncRate?: number;
+  contradiction?: {
+    hasContradiction: boolean;
+    conflictingAgents: { approve: string[]; deny: string[] };
+    severity: "none" | "mild" | "severe";
+    message?: string;
+  };
   createdAt?: Date | Timestamp; // Optional context-dependent
 }

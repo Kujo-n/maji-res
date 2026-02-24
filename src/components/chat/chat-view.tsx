@@ -50,30 +50,29 @@ export default function ChatView() {
           <div className="flex flex-col gap-6 pb-4">
             {messages.map((m) => {
               return (
-                  <MessageBubble key={m.id} role={m.role} content={m.content} />
+                <div key={m.id}>
+                  <MessageBubble role={m.role} content={m.content} />
+                  {/* 各アシスタントメッセージに紐づくMAGI審議結果を表示 */}
+                  {m.role === "assistant" && m.agentResponses && (
+                    <div className="my-4">
+                      <div className="text-xs text-muted-foreground mb-2 text-center font-mono">--- MAGI DELIBERATION ---</div>
+                      <LayeredStack responses={m.agentResponses} />
+                      <VerdictDisplay verdict={m.verdict ?? null} />
+                      {m.verdict && (
+                        <div className="w-full flex justify-center mb-6">
+                          <SyncRateDisplay
+                            rate={m.syncRate || 0}
+                            isLoading={false}
+                          />
+                        </div>
+                      )}
+                      <ClarificationDisplay responses={m.agentResponses} />
+                      <ContradictionDisplay contradiction={m.contradiction ?? null} />
+                    </div>
+                  )}
+                </div>
               );
             })}
-
-            {/* Display Agent Council if active (and belongs to the latest turn) */}
-            {agentResponses && (
-              <div className="my-4">
-                 <div className="text-xs text-muted-foreground mb-2 text-center font-mono">--- MAGI DELIBERATION IN PROGRESS ---</div>
-                 <LayeredStack responses={agentResponses} />
-                 <VerdictDisplay verdict={verdict} />
-                 {(verdict || isLoading) && (
-                     <div className="w-full flex justify-center mb-6">
-                        <SyncRateDisplay
-                            rate={syncRate || 0}
-                            isLoading={isLoading}
-                        />
-                     </div>
-                 )}
-                 {/* Display probing questions if any agent needs clarification */}
-                 <ClarificationDisplay responses={agentResponses} />
-                 {/* Display contradiction warning if agents conflict */}
-                 <ContradictionDisplay contradiction={contradiction} />
-              </div>
-            )}
 
             {isLoading && !agentResponses && (
                // Simple loading before agents return

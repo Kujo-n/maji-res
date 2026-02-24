@@ -30,6 +30,8 @@ export interface MessageData {
     content: string;
     verdict?: "APPROVE" | "DENY" | "CONDITIONAL";
     agentResponses?: AgentResponse[];
+    syncRate?: number;
+    contradiction?: object;
     createdAt: Timestamp;
 }
 
@@ -39,6 +41,8 @@ interface MessagePayload {
     content: string;
     verdict?: "APPROVE" | "DENY" | "CONDITIONAL";
     agentResponses?: AgentResponse[];
+    syncRate?: number;
+    contradiction?: object;
     createdAt: FieldValue;
 }
 
@@ -73,6 +77,8 @@ export const ChatService = {
 
     if (message.verdict) payload.verdict = message.verdict;
     if (message.agentResponses) payload.agentResponses = message.agentResponses;
+    if (message.syncRate != null) payload.syncRate = message.syncRate;
+    if (message.contradiction) payload.contradiction = message.contradiction;
 
     await addDoc(messagesRef, payload);
 
@@ -101,6 +107,8 @@ export const ChatService = {
         content: data.content,
         verdict: data.verdict as any,
         agentResponses: data.agentResponses,
+        syncRate: data.syncRate,
+        contradiction: data.contradiction as any,
         createdAt: data.createdAt?.toDate(),
       };
     });
