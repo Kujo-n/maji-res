@@ -36,15 +36,18 @@ export async function POST(req: NextRequest) {
           // Step 1: Initialize integrator with requested preset
           const integrator = createIntegrator(preset);
           
-          // Step 2: Run all three agents in parallel
-          const agentResponses = await integrator.parallelProcess(message);
+          // Step 2: Run all three agents in parallel and stream partial results
+          const agentResponses = await integrator.parallelProcess(message, undefined, (partialResponses) => {
+            // Send intermediate agent responses as data frame (Protocol: "2:[{...}]\n")
+            const dataFrame = `2:${JSON.stringify([{ agentResponses: partialResponses }])}\n`;
+            controller.enqueue(new TextEncoder().encode(dataFrame));
+          });
 
           // Step 1.5: Calculate Sync Rate and detect contradictions
           const syncRate = integrator.calculateSyncRate(agentResponses);
           const contradiction = integrator.detectContradictions(agentResponses);
 
-          // Step 2: Send agent responses as data frame (Protocol: "2:[{...}]\n")
-          // Note: The protocol expects a JSON array of data objects.
+          // Final update with syncRate and contradiction
           const dataFrame = `2:${JSON.stringify([{ agentResponses, syncRate, contradiction }])}\n`;
           controller.enqueue(new TextEncoder().encode(dataFrame));
 

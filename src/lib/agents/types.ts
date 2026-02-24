@@ -37,5 +37,5 @@ export interface AgentContext {
 export interface IAgent {
   name: string;
   role: AgentRole;
-  process(input: string, context?: AgentContext): Promise<AgentResponse>;
+  process(input: string, context?: AgentContext, onChunk?: (chunk: string) => void): Promise<AgentResponse>;
 }

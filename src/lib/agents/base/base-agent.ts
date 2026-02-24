@@ -24,7 +24,7 @@ export abstract class BaseAgent implements IAgent {
    * Standard processing logic using Vercel AI SDK.
    * Can be overridden if custom logic is needed.
    */
-  async process(input: string, context?: AgentContext): Promise<AgentResponse> {
+  async process(input: string, context?: AgentContext, onChunk?: (chunk: string) => void): Promise<AgentResponse> {
     const messages: any[] = [ // Use any[] for compatibility with AI SDK if strict types mismatch
       { role: "system", content: this.getSystemPrompt() },
       ...(context?.history || []),
@@ -35,7 +35,14 @@ export abstract class BaseAgent implements IAgent {
     
     // Mock Mode Check
     if (process.env.USE_MOCK_AGENTS === "true") {
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate delay
+        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
+        if (onChunk) {
+            const mockText = `[Mock] ${this.name}: これはモック応答です。`;
+            for (let i = 0; i < mockText.length; i++) {
+                onChunk(mockText[i]);
+                await new Promise(resolve => setTimeout(resolve, 20));
+            }
+        }
         
         const votes = ["APPROVE", "DENY", "CONDITIONAL"] as const;
         const randomVote = votes[Math.floor(Math.random() * votes.length)];
@@ -71,12 +78,18 @@ export abstract class BaseAgent implements IAgent {
 
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
-        const result = await generateText({
+        const { streamText } = await import("ai");
+        const result = await streamText({
           model: resolveModel(this.providerName, this.modelName),
           messages,
         });
 
-        let content = result.text;
+        let content = "";
+        for await (const chunk of result.textStream) {
+            content += chunk;
+            if (onChunk) onChunk(chunk);
+        }
+
         let vote: "APPROVE" | "DENY" | "CONDITIONAL" | undefined;
         let needsClarification = false;
         const clarificationQuestions: string[] = [];
