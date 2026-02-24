@@ -51,22 +51,29 @@ sequenceDiagram
 
     U->>O: Send Message
     
-    par Parallel Processing
-        O->>M: Analyze (Logic)
-        O->>B: Analyze (Ethics)
-        O->>C: Analyze (Intuition)
+    rect rgb(200, 220, 240)
+    Note over O, C: Rate Limit Avoidance (Serial Execution)<br/>See Issue 003 for future parallelization
+    O->>M: Analyze (Logic)
+    M-->>O: Text Stream (Chunks)
+    O-->>U: Protocol 2: Partial Text Updates
+    M-->>O: Final Response + Vote
+    O->>B: Analyze (Ethics)
+    B-->>O: Text Stream (Chunks)
+    O-->>U: Protocol 2: Partial Text Updates
+    B-->>O: Final Response + Vote
+    O->>C: Analyze (Intuition)
+    C-->>O: Text Stream (Chunks)
+    O-->>U: Protocol 2: Partial Text Updates
+    C-->>O: Final Response + Vote
     end
-    
-    M-->>O: Response + Vote
-    B-->>O: Response + Vote
-    C-->>O: Response + Vote
     
     O->>I: Synthesize Responses
     I->>I: Calculated Sync Rate
     I->>I: Determine Verdict (Majority Vote)
-    I-->>O: Final Response + Verdict
+    O-->>U: Protocol 2: Final AgentResponses + SyncRate
     
-    O-->>U: Stream Result
+    I-->>O: Synthesis Stream
+    O-->>U: Protocol 0: Text Stream
     O->>DB: Save Transaction (Async)
 ```
 
@@ -81,9 +88,11 @@ stateDiagram-v2
     Sending --> Streaming: API Request
     
     state Streaming {
-        [*] --> ReceivingText
-        ReceivingText --> ReceivingData: Protocol 2 (Data)
-        ReceivingData --> ReceivingText: Protocol 0 (Text)
+        [*] --> ReceivingStream
+        ReceivingStream --> ReceivingData: Protocol 2 (Partial AgentResponses)
+        ReceivingData --> ReceivingStream
+        ReceivingStream --> ReceivingText: Protocol 0 (Synthesis Text)
+        ReceivingText --> ReceivingStream
         ReceivingText --> Rendering
         ReceivingData --> Rendering
     }
@@ -121,16 +130,21 @@ flowchart LR
     UI --> Hook
     Hook -- "POST /api/magi/stream" --> Orch
     
-    Orch -- "Parallel Exec" --> Agents
-    Agents -- "Thoughts & Votes" --> Integ
+    Orch -- "Serial Exec with Delay" --> Agents
+    Agents -- "Text Chunks" --> Orch
+    Orch -- "Protocol 2 (DataStream)" --> Hook
+    Agents -- "Final Thoughts & Votes" --> Integ
     Integ -- "Synthesized Response" --> Orch
     
-    Orch -- "Stream (Text + JSON)" --> Hook
-    Hook -- "Update State" --> UI
+    Orch -- "Protocol 0 (TextStream)" --> Hook
+    Hook -- "Update State progressively" --> UI
     
     Orch -- "Async Write" --> DB
     Hook -.-> |"Load History"| DB
 ```
+
+> **Note on Future Parallelization**:
+> 現在のAPIルートはGemini Flashの無償枠制限（RPM制限）を回避するため、直列処理と2000msの待機時間を設けています。この制限を撤廃し完全並列化する将来対応については [Issue 003](../issues/003_parallel_streaming_with_paid_api.md) を参照してください。
 
 ### 3. Persistence (Firestore Structure)
 
