@@ -20,6 +20,17 @@ function generateId() {
   return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 }
 
+/**
+ * メッセージ配列から最後のアシスタントメッセージを検索する。
+ * テスト可能な純粋関数として抽出。
+ */
+export function findLastAssistantMessage(messages: Message[]): Message | null {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i].role === "assistant") return messages[i];
+  }
+  return null;
+}
+
 export function useMagiChat() {
   const { user } = useAuth();
   const { activeThreadId, setActiveThreadId, refreshHistory } = useChatContext();
@@ -31,12 +42,7 @@ export function useMagiChat() {
   // ---------------------------------------------------------------------------
   // 最新のアシスタントメッセージからMAGI情報を導出
   // ---------------------------------------------------------------------------
-  const lastAssistant = useMemo(() => {
-    for (let i = messages.length - 1; i >= 0; i--) {
-      if (messages[i].role === "assistant") return messages[i];
-    }
-    return null;
-  }, [messages]);
+  const lastAssistant = useMemo(() => findLastAssistantMessage(messages), [messages]);
 
   const agentResponses = lastAssistant?.agentResponses ?? null;
   const verdict = lastAssistant?.verdict ?? null;
