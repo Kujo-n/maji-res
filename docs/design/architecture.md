@@ -67,13 +67,19 @@ sequenceDiagram
     C-->>O: Final Response + Vote
     end
     
-    O->>I: Synthesize Responses
+    O->>I: Synthesize Responses (Start)
     I->>I: Calculated Sync Rate
     I->>I: Determine Verdict (Majority Vote)
     O-->>U: Protocol 2: Final AgentResponses + SyncRate
+
+    alt Verdict is CONDITIONAL
+        I-->>O: Skip Synthesis
+        O-->>U: Protocol 0: VERDICT: CONDITIONAL
+    else Verdict is APPROVE or DENY
+        I-->>O: Synthesis Stream
+        O-->>U: Protocol 0: Text Stream + VERDICT
+    end
     
-    I-->>O: Synthesis Stream
-    O-->>U: Protocol 0: Text Stream
     O->>DB: Save Transaction (Async)
 ```
 
@@ -134,9 +140,9 @@ flowchart LR
     Agents -- "Text Chunks" --> Orch
     Orch -- "Protocol 2 (DataStream)" --> Hook
     Agents -- "Final Thoughts & Votes" --> Integ
-    Integ -- "Synthesized Response" --> Orch
+    Integ -. "Synthesized Response (if APPROVE/DENY)" .-> Orch
     
-    Orch -- "Protocol 0 (TextStream)" --> Hook
+    Orch -- "Protocol 0 (TextStream) / VERDICT only" --> Hook
     Hook -- "Update State progressively" --> UI
     
     Orch -- "Async Write" --> DB

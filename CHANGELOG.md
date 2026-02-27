@@ -5,9 +5,13 @@ All notable changes to this project will be documented in this file.
 ## [1.3.2] - 2026-02-27
 
 ### Added
+- **条件付き(CONDITIONAL)判定時の統合エージェントスキップ機能を追加**: 3エージェントの投票結果で多数決が成立せず `CONDITIONAL` となった場合、統合エージェントの生成処理をスキップし、クラリフィケーション質問のみを即座に提示するように変更（レスポンス待ち時間の短縮と UX 向上）。
 - Clarification（追加質問）UIに「回答する」インラインボタンを追加。クリックでチャット入力欄に質問がプリセットされる。
 - 質問が2つ以上の場合に「すべてに回答する」一括プリセットボタンを追加。番号付きテンプレートで全質問を入力欄にセット。
 - `clarification-display.test.ts`: `collectClarificationQuestions` 関数の8テストケースを追加。
+
+### Changed
+- 多数決判定ロジック(`determineDecision`)を `route.ts` などのハードコードから `Integrator` クラスへ抽出し、DRY原則を適用。
 
 ### Changed
 - `ClarificationDisplay` の質問収集ロジックを `collectClarificationQuestions` 純粋関数に抽出（テスタビリティ向上）。
