@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.2] - 2026-02-27
+
+### Added
+- Clarification（追加質問）UIに「回答する」インラインボタンを追加。クリックでチャット入力欄に質問がプリセットされる。
+- 質問が2つ以上の場合に「すべてに回答する」一括プリセットボタンを追加。番号付きテンプレートで全質問を入力欄にセット。
+- `clarification-display.test.ts`: `collectClarificationQuestions` 関数の8テストケースを追加。
+
+### Changed
+- `ClarificationDisplay` の質問収集ロジックを `collectClarificationQuestions` 純粋関数に抽出（テスタビリティ向上）。
+- `ChatView` の入力プリフィル＆フォーカスロジックを `setInputAndFocus` ヘルパーに統合（DRY改善）。
+- `ChatInput` が外部 `textareaRef` を受け取れるよう Props 拡張。
+
+### Improved
+- Clarification ボタンに `aria-label` を追加（アクセシビリティ向上）。
+
 ## [1.3.1] - 2026-02-24
 
 ### Fixed
