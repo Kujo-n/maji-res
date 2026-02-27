@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest, NextResponse } from "next/server";
 
 // Create hoisted mock functions
-const { mockParallelProcess, mockCalculateSyncRate, mockDetectContradictions, mockStreamSynthesize } = vi.hoisted(() => ({
+const { mockParallelProcess, mockCalculateSyncRate, mockDetectContradictions, mockStreamSynthesize, mockDetermineDecision } = vi.hoisted(() => ({
   mockParallelProcess: vi.fn().mockResolvedValue([
     { role: "MELCHIOR", content: "Agent 1 response", metadata: { vote: "APPROVE" } },
     { role: "BALTHASAR", content: "Agent 2 response", metadata: { vote: "APPROVE" } },
@@ -21,6 +21,7 @@ const { mockParallelProcess, mockCalculateSyncRate, mockDetectContradictions, mo
       })
     ),
   }),
+  mockDetermineDecision: vi.fn().mockReturnValue("APPROVE"),
 }));
 
 // Mock dependencies
@@ -36,6 +37,7 @@ vi.mock("@/lib/agents/integrator", () => ({
     calculateSyncRate: mockCalculateSyncRate,
     detectContradictions: mockDetectContradictions,
     streamSynthesize: mockStreamSynthesize,
+    determineDecision: mockDetermineDecision,
   }),
 }));
 
@@ -115,5 +117,53 @@ describe("POST /api/magi/stream", () => {
     const response = await POST(createRequest({ message: "Hello", preset: "MAGI" }));
     expect(response.status).toBe(200);
   });
+  it("skips streamSynthesize when verdict is CONDITIONAL", async () => {
+    mockParallelProcess.mockResolvedValue([
+      { role: "MELCHIOR", content: "ok", metadata: { vote: "APPROVE" } },
+      { role: "BALTHASAR", content: "no", metadata: { vote: "DENY" } },
+      { role: "CASPER", content: "maybe", metadata: { vote: "CONDITIONAL" } },
+    ]);
+    mockDetermineDecision.mockReturnValue("CONDITIONAL");
 
+    const response = await POST(createRequest({ message: "Hello" }));
+    expect(response.status).toBe(200);
+
+    // Read the full stream to ensure it completes
+    const reader = response.body!.getReader();
+    const decoder = new TextDecoder();
+    let fullText = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      fullText += decoder.decode(value, { stream: true });
+    }
+
+    // streamSynthesize should NOT be called
+    expect(mockStreamSynthesize).not.toHaveBeenCalled();
+    // VERDICT: CONDITIONAL should be in the stream
+    expect(fullText).toContain("VERDICT: CONDITIONAL");
+  });
+
+  it("calls streamSynthesize when verdict is APPROVE (majority)", async () => {
+    mockParallelProcess.mockResolvedValue([
+      { role: "MELCHIOR", content: "ok", metadata: { vote: "APPROVE" } },
+      { role: "BALTHASAR", content: "ok", metadata: { vote: "APPROVE" } },
+      { role: "CASPER", content: "no", metadata: { vote: "DENY" } },
+    ]);
+    mockDetermineDecision.mockReturnValue("APPROVE");
+
+    const response = await POST(createRequest({ message: "Hello" }));
+    expect(response.status).toBe(200);
+
+    // Read the full stream
+    const reader = response.body!.getReader();
+    const decoder = new TextDecoder();
+    while (true) {
+      const { done } = await reader.read();
+      if (done) break;
+    }
+
+    // streamSynthesize SHOULD be called
+    expect(mockStreamSynthesize).toHaveBeenCalled();
+  });
 });

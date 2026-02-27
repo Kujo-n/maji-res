@@ -51,20 +51,6 @@ export class MagiOrchestrator {
   }
 
   private determineDecision(responses: AgentResponse[]): "APPROVE" | "DENY" | "CONDITIONAL" {
-    // Simplified decision logic
-    // In a real implementation, each agent would provide a vote in their response
-    // For now, return APPROVE as default
-    const votes = responses.map((r) => r.metadata?.vote).filter(Boolean);
-    
-    if (votes.length === 0) {
-      return "APPROVE"; // Default if no explicit votes
-    }
-
-    const approvalCount = votes.filter((v) => v === "APPROVE").length;
-    const denyCount = votes.filter((v) => v === "DENY").length;
-
-    if (approvalCount > denyCount) return "APPROVE";
-    if (denyCount > approvalCount) return "DENY";
-    return "CONDITIONAL";
+    return this.integrator.determineDecision(responses);
   }
 }

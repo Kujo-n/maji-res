@@ -255,6 +255,26 @@ Casperの直感は肯定的ですが、リスクも指摘しています。
       message,
     };
   }
+
+  /**
+   * Determine the final decision based on agent responses using a majority vote rule.
+   */
+  determineDecision(responses: AgentResponse[]): "APPROVE" | "DENY" | "CONDITIONAL" {
+    const votes = responses
+      .map((r) => r.metadata?.vote)
+      .filter((v): v is "APPROVE" | "DENY" | "CONDITIONAL" => Boolean(v));
+    
+    if (votes.length === 0) {
+      return "APPROVE"; // Default if no explicit votes
+    }
+
+    const approvalCount = votes.filter((v) => v === "APPROVE").length;
+    const denyCount = votes.filter((v) => v === "DENY").length;
+
+    if (approvalCount > denyCount) return "APPROVE";
+    if (denyCount > approvalCount) return "DENY";
+    return "CONDITIONAL"; // Tie or mostly conditional votes
+  }
 }
 
 /**

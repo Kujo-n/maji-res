@@ -51,6 +51,18 @@ export async function POST(req: NextRequest) {
           const dataFrame = `2:${JSON.stringify([{ agentResponses, syncRate, contradiction }])}\n`;
           controller.enqueue(new TextEncoder().encode(dataFrame));
 
+          // Step 2.5: Determine verdict from agent votes
+          const verdict = integrator.determineDecision(agentResponses);
+          const isConditional = verdict === "CONDITIONAL";
+
+          if (isConditional) {
+            // CONDITIONAL: 統合エージェントをスキップし、verdict のみ通知
+            const verdictFrame = `0:${JSON.stringify("VERDICT: CONDITIONAL\n")}\n`;
+            controller.enqueue(new TextEncoder().encode(verdictFrame));
+            controller.close();
+            return;
+          }
+
           // Step 3: Stream the synthesis response
           const result = await integrator.streamSynthesize(message, agentResponses);
           
