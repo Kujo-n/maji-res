@@ -8,6 +8,8 @@ interface MessageBubbleProps {
 }
 
 export function MessageBubble({ role, content }: MessageBubbleProps) {
+  if (!content) return null;
+
   const isUser = role === "user";
 
   return (
