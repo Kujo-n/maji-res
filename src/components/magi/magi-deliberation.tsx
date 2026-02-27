@@ -11,6 +11,8 @@ import React from "react";
 interface MagiDeliberationProps {
   message: Message;
   isLoading?: boolean;
+  onClarificationAnswer?: (question: string) => void;
+  onClarificationAnswerAll?: (questions: string[]) => void;
 }
 
 /**
@@ -21,6 +23,8 @@ interface MagiDeliberationProps {
 export const MagiDeliberation = React.memo(function MagiDeliberation({
   message,
   isLoading = false,
+  onClarificationAnswer,
+  onClarificationAnswerAll,
 }: MagiDeliberationProps) {
   if (!message.agentResponses) return null;
 
@@ -39,7 +43,11 @@ export const MagiDeliberation = React.memo(function MagiDeliberation({
           />
         </div>
       )}
-      <ClarificationDisplay responses={message.agentResponses} />
+      <ClarificationDisplay
+        responses={message.agentResponses}
+        onAnswerClick={onClarificationAnswer}
+        onAnswerAllClick={onClarificationAnswerAll}
+      />
       <ContradictionDisplay contradiction={message.contradiction ?? null} />
     </div>
   );

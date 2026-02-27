@@ -12,6 +12,7 @@ export default function ChatView() {
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isAutoScrollEnabled, setIsAutoScrollEnabled] = useState(true);
 
   const handleScroll = useCallback(() => {
@@ -42,6 +43,24 @@ export default function ChatView() {
     }
   };
 
+  const setInputAndFocus = useCallback((text: string) => {
+    setInput(text);
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 0);
+  }, []);
+
+  const handleClarificationAnswer = useCallback((question: string) => {
+    setInputAndFocus(`「${question}」への回答: `);
+  }, [setInputAndFocus]);
+
+  const handleClarificationAnswerAll = useCallback((questions: string[]) => {
+    const template = questions
+      .map((q, i) => `${i + 1}. 「${q}」への回答: `)
+      .join("\n");
+    setInputAndFocus(template);
+  }, [setInputAndFocus]);
+
   return (
     <div className="flex h-full flex-col touch-manipulation">
       {/* Header with reset button */}
@@ -66,7 +85,11 @@ export default function ChatView() {
               <div key={m.id}>
                 <MessageBubble role={m.role} content={m.content} />
                 {m.role === "assistant" && (
-                  <MagiDeliberation message={m} />
+                  <MagiDeliberation
+                    message={m}
+                    onClarificationAnswer={handleClarificationAnswer}
+                    onClarificationAnswerAll={handleClarificationAnswerAll}
+                  />
                 )}
               </div>
             ))}
@@ -87,6 +110,7 @@ export default function ChatView() {
           handleInputChange={handleInputChange}
           handleSubmit={handleSubmit}
           isLoading={isLoading}
+          textareaRef={textareaRef}
         />
       </div>
     </div>

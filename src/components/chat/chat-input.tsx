@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { SendHorizontal } from "lucide-react";
-import { KeyboardEvent, useRef } from "react";
+import { KeyboardEvent, RefObject } from "react";
 import { magiHaptic } from "@/lib/haptics";
 
 interface ChatInputProps {
@@ -11,11 +11,10 @@ interface ChatInputProps {
   handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
   isLoading: boolean;
+  textareaRef?: RefObject<HTMLTextAreaElement | null>;
 }
 
-export function ChatInput({ input, handleInputChange, handleSubmit, isLoading }: ChatInputProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
+export function ChatInput({ input, handleInputChange, handleSubmit, isLoading, textareaRef }: ChatInputProps) {
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -56,3 +55,4 @@ export function ChatInput({ input, handleInputChange, handleSubmit, isLoading }:
     </div>
   );
 }
+
