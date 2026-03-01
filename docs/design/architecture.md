@@ -219,6 +219,7 @@ flowchart LR
 | レイヤー | 実装 | 内容 |
 |:---|:---|:---|
 | **レート制限** | `rate-limiter.ts` | IP+パスごとに 10req/min（インメモリ） |
+| **利用上限制限** | `limits.ts`, `chat-service.ts` | ユーザーのロールに基づくスレッド作成およびメッセージ投稿の上限設定。超過時は古いデータの自動削除および書込みブロックによるリソース保護 |
 | **認証** | `auth-guard.ts` | Firebase Client SDKの状態監視とフロントエンドでのアクセスブロック |
 | **BFFによる一括処理** | `/api/auth/register-pending` | 未登録ユーザーへの初回登録時、IDトークン検証完了後にサーバー側でFirestoreデータ作成とNodemailer(Gmail SMTP)による管理者へのメール通知をセキュアに一括実行。 |
 | **ユーザー状態** | `users.ts`, `admin-users.ts` | Firestoreから `status: active` および `role: admin` であるか検証（サーバーサイドとクライアントサイドの二重防御） |
