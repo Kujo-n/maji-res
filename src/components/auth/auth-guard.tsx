@@ -5,14 +5,16 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, userData, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login");
+    if (!loading) {
+      if (!user || (user && userData?.status !== "active")) {
+        router.push("/login");
+      }
     }
-  }, [user, loading, router]);
+  }, [user, userData, loading, router]);
 
   if (loading) {
     return (
@@ -22,7 +24,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!user) {
+  if (!user || userData?.status !== "active") {
     return null;
   }
 
