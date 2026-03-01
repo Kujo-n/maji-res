@@ -155,6 +155,14 @@ flowchart LR
 ### 3. Persistence (Firestore Structure)
 
 ```
+allowlist/
+  {email}/
+    status: "active" | "pending"
+    role: "user" | "admin"
+    name: string
+    createdAt: Timestamp
+    activatedAt?: Timestamp
+
 users/{userId}/
   threads/{threadId}/
     title: string
@@ -185,15 +193,25 @@ users/{userId}/
 
 ## Security
 
-APIエンドポイントに対する多層防御を実装。
+APIエンドポイントに対する多層防御および、BFF（Backend For Frontend）パターンを用いた管理者アクセスの保護を実装しています。
 
 ```mermaid
 flowchart LR
     Req["Client Request"] --> RL["Rate Limiter<br/>(10req/min per IP)"]
     RL -->|Pass| Auth["Auth Guard<br/>(Firebase ID Token)"]
     RL -->|Reject| R429["429 Too Many Requests"]
-    Auth -->|Pass| Val["Input Validation<br/>(type, length, sanitize)"]
+    
+    Auth -->|Pass /api/magi/*| DBCheck["Status Check<br/>(Firestore: isActive?)"]
+    Auth -->|Pass /api/auth/register-pending| BFF["BFF<br/>(Generate Pending Data & Email)"]
+    Auth -->|Pass /api/admin/*| AdminCheck["Role Check<br/>(Firestore: role:admin?)"]
     Auth -->|Reject| R401["401 Unauthorized"]
+    
+    DBCheck -->|Pass| Val["Input Validation<br/>(type, length, sanitize)"]
+    DBCheck -->|Reject| R403["403 Forbidden<br/>(Pending User)"]
+    
+    AdminCheck -->|Pass| AdminAPI["Execute Admin Action"]
+    AdminCheck -->|Reject| R403Admin["403 Forbidden"]
+    
     Val -->|Pass| API["API Handler"]
     Val -->|Reject| R400["400 Bad Request"]
 ```
@@ -201,7 +219,9 @@ flowchart LR
 | レイヤー | 実装 | 内容 |
 |:---|:---|:---|
 | **レート制限** | `rate-limiter.ts` | IP+パスごとに 10req/min（インメモリ） |
-| **認証** | `auth-guard.ts` | Firebase Auth IDトークン検証 |
+| **認証** | `auth-guard.ts` | Firebase Client SDKの状態監視とフロントエンドでのアクセスブロック |
+| **BFFによる一括処理** | `/api/auth/register-pending` | 未登録ユーザーへの初回登録時、IDトークン検証完了後にサーバー側でFirestoreデータ作成とNodemailer(Gmail SMTP)による管理者へのメール通知をセキュアに一括実行。 |
+| **ユーザー状態** | `users.ts`, `admin-users.ts` | Firestoreから `status: active` および `role: admin` であるか検証（サーバーサイドとクライアントサイドの二重防御） |
 | **入力検証** | 各 API route | メッセージ型・長さ（10,000文字上限） |
 | **パストラバーサル防止** | `prompt-loader.ts` | プリセット名・ファイル名のサニタイズ |
 | **情報漏洩防止** | `stream/route.ts` | 本番環境でスタックトレースを除外 |
