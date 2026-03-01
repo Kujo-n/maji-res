@@ -32,7 +32,7 @@ export function findLastAssistantMessage(messages: Message[]): Message | null {
 }
 
 export function useMagiChat() {
-  const { user } = useAuth();
+  const { user, userData } = useAuth();
   const { activeThreadId, setActiveThreadId, refreshHistory } = useChatContext();
   const { preset } = usePreset();
 
@@ -80,17 +80,24 @@ export function useMagiChat() {
   // メッセージ送信
   // ---------------------------------------------------------------------------
   const append = async (message: Omit<Message, "id">) => {
-    if (!user) return;
+    if (!user || !userData) {
+      toast.error("ユーザー情報の取得に失敗しました");
+      return;
+    }
 
+    const role = userData.role || "user";
     let currentThreadId = activeThreadId;
+
     if (!currentThreadId) {
       try {
-        currentThreadId = await ChatService.createThread(user.uid, message.content.substring(0, 30) + "...");
+        currentThreadId = await ChatService.createThread(user.uid, role, message.content.substring(0, 30) + "...");
         setActiveThreadId(currentThreadId);
         // 新しいスレッドが作成されたので履歴を更新
         refreshHistory();
-      } catch (e) {
+      } catch (e: any) {
         console.error("Failed to create thread", e);
+        toast.error("スレッド作成エラーが発生しました");
+        return;
       }
     }
 
@@ -104,9 +111,21 @@ export function useMagiChat() {
     setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
 
-    // ユーザーメッセージを保存
+    // ユーザーメッセージを保存 (上限チェック対応)
     if (currentThreadId) {
-      ChatService.addMessage(user.uid, currentThreadId, userMessage).catch(console.error);
+      try {
+        await ChatService.addMessage(user.uid, role, currentThreadId, userMessage);
+      } catch (e: any) {
+        if (e.message === "MESSAGE_LIMIT_REACHED") {
+          toast.error("このスレッドのメッセージ件数上限に達しました。新しい会話を作成してください。");
+        } else {
+          toast.error("メッセージの保存に失敗しました");
+        }
+        setIsLoading(false);
+        // ロールバック
+        setMessages((prev) => prev.slice(0, -1));
+        return;
+      }
     }
 
     try {
@@ -215,7 +234,7 @@ export function useMagiChat() {
 
       // アシスタントメッセージを保存
       if (currentThreadId) {
-        ChatService.addMessage(user.uid, currentThreadId, assistantMessage).catch(console.error);
+        ChatService.addMessage(user.uid, role, currentThreadId, assistantMessage).catch(console.error);
 
         // Firestoreに判定結果を保存
         if (assistantMessage.verdict && assistantMessage.agentResponses) {
