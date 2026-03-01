@@ -15,9 +15,10 @@ import { useAuth } from "@/lib/auth-context";
 import { auth } from "@/lib/firebase/client";
 import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export function UserNav() {
-  const { user } = useAuth();
+  const { user, userData } = useAuth();
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -50,8 +51,22 @@ export function UserNav() {
           <DropdownMenuItem>Profile</DropdownMenuItem>
           <DropdownMenuItem>Settings</DropdownMenuItem>
         </DropdownMenuGroup>
+        {userData?.role === "admin" && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem asChild>
+                <Link href="/admin">
+                  <span className="cursor-pointer w-full text-blue-600 dark:text-blue-400 font-medium">
+                    Admin Dashboard
+                  </span>
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </>
+        )}
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut}>Log out</DropdownMenuItem>
+        <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">Log out</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
