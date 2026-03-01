@@ -1,0 +1,9 @@
+{
+  "provider": "google",
+  "defaultModel": "gemini-2.5-flash",
+  "agents": [
+    { "id": "empathy", "name": "お気持ち", "role": "感情・共感重視", "promptFile": "empathy.md" },
+    { "id": "samurai", "name": "侍", "role": "信念・メリット重視", "promptFile": "samurai.md" },
+    { "id": "robot", "name": "ロボット", "role": "生産性・効率性重視", "promptFile": "robot.md" }
+  ]
+}
