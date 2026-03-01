@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth } from "@/lib/firebase/admin";
+import { getAdminUserData, AdminUserData } from "@/lib/firebase/admin-users";
 
 /**
  * Verify Firebase Auth token from the Authorization header.
@@ -9,7 +10,7 @@ import { adminAuth } from "@/lib/firebase/admin";
  */
 export async function verifyAuth(
   req: NextRequest
-): Promise<{ uid: string } | NextResponse> {
+): Promise<{ uid: string; user?: AdminUserData } | NextResponse> {
   const authHeader = req.headers.get("Authorization");
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -30,7 +31,25 @@ export async function verifyAuth(
 
   try {
     const decodedToken = await adminAuth.verifyIdToken(idToken);
-    return { uid: decodedToken.uid };
+    const email = decodedToken.email;
+
+    if (!email) {
+      return NextResponse.json(
+        { error: "Email missing from token" },
+        { status: 401 }
+      );
+    }
+
+    // Firestore上でステータスがactiveであるかチェック
+    const userData = await getAdminUserData(email);
+    if (!userData || userData.status !== "active") {
+      return NextResponse.json(
+        { error: "Account is pending or inactive" },
+        { status: 403 }
+      );
+    }
+
+    return { uid: decodedToken.uid, user: userData };
   } catch (error) {
     console.error("[auth] Token verification failed:", error);
     return NextResponse.json(

@@ -2,8 +2,8 @@
   "provider": "google",
   "defaultModel": "gemini-2.5-flash",
   "agents": [
-    { "id": "melchior", "name": "MELCHIOR", "role": "科学者", "promptFile": "melchior.md" },
-    { "id": "balthasar", "name": "BALTHASAR", "role": "母", "promptFile": "balthasar.md" },
-    { "id": "casper", "name": "CASPER", "role": "女", "promptFile": "casper.md" }
+    { "id": "melchior", "name": "MELCHIOR:科学者", "role": "科学者", "promptFile": "melchior.md" },
+    { "id": "balthasar", "name": "BALTHASAR:母", "role": "母", "promptFile": "balthasar.md" },
+    { "id": "casper", "name": "CASPER:女", "role": "女", "promptFile": "casper.md" }
   ]
 }
