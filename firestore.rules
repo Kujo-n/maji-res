@@ -10,8 +10,8 @@ service cloud.firestore {
 
     // User data rule
     match /users/{userId} {
-      // Allow read/write only if the requester is the owner
-      allow read, write: if isOwner(userId);
+      // Allow read/write if the requester is the owner by UID OR their email matches the document ID (userId)
+      allow read, write: if isOwner(userId) || (request.auth != null && request.auth.token.email == userId);
 
       // Thread subcollection
       match /threads/{threadId} {
