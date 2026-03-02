@@ -62,20 +62,21 @@ export default function ChatView() {
   }, [setInputAndFocus]);
 
   return (
-    <div className="flex h-full flex-col touch-manipulation">
+    <div className="flex flex-col h-full w-full touch-manipulation overflow-hidden">
       {/* Header with reset button */}
       {messages.length > 0 && (
-        <div className="flex justify-end p-2 sm:p-3 border-b border-border/30 pt-safe">
+        <div className="flex-none flex justify-end p-2 sm:p-3 border-b border-border/30 pt-safe bg-background">
           <ResetButton onReset={reset} disabled={isLoading} />
         </div>
       )}
       <div 
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto p-3 sm:p-4 max-w-4xl mx-auto w-full scroll-smooth-ios"
+        className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 w-full scroll-smooth-ios"
       >
+        <div className="max-w-4xl mx-auto w-full h-full flex flex-col">
         {messages.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center space-y-4 text-muted-foreground">
+          <div className="flex flex-col items-center justify-center space-y-4 text-muted-foreground my-auto">
             <h1 className="text-2xl font-bold tracking-tighter text-foreground">MAGI System</h1>
             <p className="text-sm">Enter your query to initiate the council of three.</p>
           </div>
@@ -103,8 +104,10 @@ export default function ChatView() {
             <div ref={messagesEndRef} />
           </div>
         )}
+        </div>
       </div>
-      <div className="max-w-4xl mx-auto w-full p-3 sm:p-4 pb-safe">
+      <div className="flex-none w-full bg-background border-t border-border/30 p-3 sm:p-4 pb-safe">
+        <div className="max-w-4xl mx-auto w-full">
         <ChatInput
           input={input}
           handleInputChange={handleInputChange}
@@ -112,6 +115,7 @@ export default function ChatView() {
           isLoading={isLoading}
           textareaRef={textareaRef}
         />
+        </div>
       </div>
     </div>
   );
