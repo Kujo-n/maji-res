@@ -25,6 +25,7 @@ export interface ThreadData {
   id?: string;
   userId: string;
   title: string;
+  presetId?: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -55,7 +56,7 @@ export const ChatService = {
   /**
    * Create a new chat thread for a user
    */
-  async createThread(userId: string, role: UserRole, title: string = "New Conversation") {
+  async createThread(userId: string, role: UserRole, presetId: string, title: string = "New Conversation") {
     const limitMax = THREAD_LIMITS[role] || THREAD_LIMITS.user;
     const threadsRef = collection(db, "users", userId, "threads");
 
@@ -85,6 +86,7 @@ export const ChatService = {
     const docRef = await addDoc(threadsRef, {
       userId,
       title,
+      presetId,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
