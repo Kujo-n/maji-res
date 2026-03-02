@@ -28,6 +28,7 @@ export function useMagiChat() {
     syncRate,
     contradiction,
     reset,
+    skipNextLoadRef,
   } = useChatSession();
 
   // 2. ストリームの取得とパース、state更新を行うカスタムフック
@@ -49,6 +50,7 @@ export function useMagiChat() {
     if (!currentThreadId) {
       try {
         currentThreadId = await ChatService.createThread(user.uid, role, preset, message.content.substring(0, 30) + "...");
+        skipNextLoadRef.current = true;
         setActiveThreadId(currentThreadId);
         refreshHistory();
       } catch (e: any) {

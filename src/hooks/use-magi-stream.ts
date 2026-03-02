@@ -80,11 +80,9 @@ export function useMagiStream() {
             }
 
             // メッセージ状態を更新
-            updateMessages((prev) => {
-              const newMessages = [...prev];
-              newMessages[newMessages.length - 1] = { ...assistantMessageRef };
-              return newMessages;
-            });
+            updateMessages((prev) => 
+              prev.map(msg => msg.id === assistantMessageRef.id ? { ...assistantMessageRef } : msg)
+            );
 
           } else if (line.startsWith('2:')) {
             try {
@@ -102,11 +100,9 @@ export function useMagiStream() {
                     assistantMessageRef.contradiction = payload.contradiction;
                   }
                   // メッセージ状態を更新（MAGI情報を反映）
-                  updateMessages((prev) => {
-                    const newMessages = [...prev];
-                    newMessages[newMessages.length - 1] = { ...assistantMessageRef };
-                    return newMessages;
-                  });
+                  updateMessages((prev) => 
+                    prev.map(msg => msg.id === assistantMessageRef.id ? { ...assistantMessageRef } : msg)
+                  );
                 }
               }
             } catch (e) { console.error(e); }
@@ -122,7 +118,14 @@ export function useMagiStream() {
         role: "assistant",
         content: `Error: MAGIとの通信に失敗しました。(${errorMsg})`,
       };
-      updateMessages((prev) => [...prev, errorMessage]);
+      // エラー時はプレースホルダーメッセージを上書きするか追加する
+      updateMessages((prev) => {
+        const exists = prev.some(msg => msg.id === assistantMessageRef.id);
+        if (exists) {
+          return prev.map(msg => msg.id === assistantMessageRef.id ? errorMessage : msg);
+        }
+        return [...prev, errorMessage];
+      });
     }
   };
 

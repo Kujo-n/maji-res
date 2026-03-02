@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Message } from "@/lib/types";
 import { useAuth } from "@/lib/auth-context";
 import { useChatContext } from "@/components/chat/chat-context";
@@ -29,6 +29,8 @@ export function useChatSession() {
   
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  
+  const skipNextLoadRef = useRef(false);
 
   // ---------------------------------------------------------------------------
   // 最新のMAGI情報を導出（派生状態コンポジション）
@@ -54,24 +56,33 @@ export function useChatSession() {
     }
   }, [user]);
 
-  // activeThreadId の変化を監視し、スレッド読み込みおよびプリセット状態復元処理
+  // activeThreadId の変化を監視し、スレッド読み込みを行う
   useEffect(() => {
     if (!user) return;
 
     if (activeThreadId) {
+      if (skipNextLoadRef.current) {
+        skipNextLoadRef.current = false;
+        return;
+      }
       // 既存スレッドロード
       loadThread(activeThreadId);
-      
-      // 履歴からプリセット情報を復元
-      const activeThread = history.find((t) => t.id === activeThreadId);
-      if (activeThread?.presetId) {
-        setPreset(activeThread.presetId);
-      }
     } else {
       // 新規チャット時はクリア
       setMessages([]);
     }
-  }, [activeThreadId, user, loadThread, history, setPreset]);
+  }, [activeThreadId, user, loadThread]);
+
+  // 履歴更新時またはスレッド切り替え時にプリセット情報を復元する
+  useEffect(() => {
+    if (!activeThreadId || !history.length) return;
+    
+    // 履歴からプリセット情報を復元
+    const activeThread = history.find((t) => t.id === activeThreadId);
+    if (activeThread?.presetId) {
+      setPreset(activeThread.presetId);
+    }
+  }, [activeThreadId, history, setPreset]);
 
   // ---------------------------------------------------------------------------
   // ユーティリティ群
@@ -91,5 +102,6 @@ export function useChatSession() {
     syncRate,
     contradiction,
     reset,
+    skipNextLoadRef,
   };
 }
