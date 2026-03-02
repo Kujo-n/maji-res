@@ -35,7 +35,7 @@ describe('ChatService', () => {
       (getDocs as any).mockResolvedValue(mockSnapshotCount);
       (addDoc as any).mockResolvedValue({ id: 'new-thread-id' });
 
-      const threadId = await ChatService.createThread('user1', 'user', 'My Title');
+      const threadId = await ChatService.createThread('user1', 'user', 'MAGI', 'My Title');
 
       expect(threadId).toBe('new-thread-id');
       expect(addDoc).toHaveBeenCalled();
@@ -59,7 +59,7 @@ describe('ChatService', () => {
       (writeBatch as any).mockReturnValue(mockBatch);
       (addDoc as any).mockResolvedValue({ id: 'new-thread-id' });
 
-      const threadId = await ChatService.createThread('user1', 'user', 'My Title');
+      const threadId = await ChatService.createThread('user1', 'user', 'MAGI', 'My Title');
 
       expect(threadId).toBe('new-thread-id');
       expect(writeBatch).toHaveBeenCalled();
