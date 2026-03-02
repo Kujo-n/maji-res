@@ -119,7 +119,7 @@ flowchart LR
     
     subgraph Client
         UI[Chat UI]
-        Hook[useMagiChat]
+        Hook["useMagiChat<br/>(Composes Session & Stream Hooks)"]
     end
     
     subgraph Server["Next.js Handler"]
