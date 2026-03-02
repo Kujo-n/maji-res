@@ -81,12 +81,12 @@ export const DecisionService = {
       verdict,
       syncRate,
       hasContradiction: contradiction.hasContradiction,
-      contradictionSeverity: contradiction.severity,
+      contradictionSeverity: contradiction.severity ?? null,
       agentResponses: agentResponses.map(r => ({
         role: r.role,
         content: r.content.substring(0, MAX_RESPONSE_CONTENT_LENGTH),
-        vote: r.metadata?.vote,
-        needsClarification: r.metadata?.needsClarification,
+        vote: r.metadata?.vote ?? null,
+        needsClarification: r.metadata?.needsClarification ?? null,
       })),
       createdAt: serverTimestamp(),
     });
