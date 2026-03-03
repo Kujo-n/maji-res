@@ -60,3 +60,10 @@ export async function updateUserStatusAdmin(email: string, status: UserStatus): 
   }
   await adminDb.collection("users").doc(email).update(updateData);
 }
+
+/**
+ * ユーザーロールを更新する
+ */
+export async function updateUserRoleAdmin(email: string, role: UserRole): Promise<void> {
+  await adminDb.collection("users").doc(email).update({ role });
+}

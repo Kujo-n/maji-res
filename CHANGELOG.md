@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.2] - 2026-03-03
+
+### Added
+- **管理者画面からのロール変更機能**:
+  - Active Usersセクションに「Admin に昇格」/「User に降格」ボタンを追加。自分自身のロール変更は不可（ボタン非表示）。
+  - ダウングレード（`admin` → `user`）時にサーバーサイド（Admin SDK）で超過スレッド・メッセージを自動削除する機能を実装。
+  - 降格時は確認ダイアログで上限変更内容とデータ削除の警告を表示。削除結果（件数）をアラートで通知。
+  - Firestoreバッチ書き込みの500件制限に対応したチャンク分割処理を実装。
+  - `admin-users.ts` に `updateUserRoleAdmin()` 関数を追加。
+  - `/api/admin/users` PATCH エンドポイントに `action: "updateRole"` 対応を追加（既存のステータス変更と後方互換）。
+  - ロール変更中のボタン無効化（ローディング状態）でダブルクリック防止。
+
 ## [1.5.1] - 2026-03-02
 
 ### Added

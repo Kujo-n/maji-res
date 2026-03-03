@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useSearchParams } from "next/navigation";
-import { CheckCircle2, Clock, Mail } from "lucide-react";
+import { CheckCircle2, Clock, Mail, Shield, ShieldOff } from "lucide-react";
+import { THREAD_LIMITS, MESSAGE_LIMITS } from "@/lib/constants/limits";
 
 export default function AdminPage() {
   const { user } = useAuth();
@@ -17,6 +18,7 @@ export default function AdminPage() {
   const [users, setUsers] = useState<AdminUserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [updatingRole, setUpdatingRole] = useState<string | null>(null);
 
   const fetchUsers = async () => {
     try {
@@ -59,9 +61,61 @@ export default function AdminPage() {
       if (!res.ok) throw new Error("Failed to update status");
       
       // Update local state
-      setUsers(users.map(u => u.email === email ? { ...u, status: newStatus } : u));
+      setUsers(prev => prev.map(u => u.email === email ? { ...u, status: newStatus } : u));
     } catch (err: any) {
       alert("Error updating user status: " + err.message);
+    }
+  };
+
+  const handleRoleChange = async (email: string, newRole: "admin" | "user") => {
+    // ダウングレード時は確認ダイアログを表示
+    if (newRole === "user") {
+      const confirmed = window.confirm(
+        `ロール変更の確認\n\n` +
+        `このユーザーのロールを Admin から User に変更します。\n\n` +
+        `以下の上限が変更されます:\n` +
+        `• スレッド数: ${THREAD_LIMITS.admin} → ${THREAD_LIMITS.user}\n` +
+        `• メッセージ数/スレッド: ${MESSAGE_LIMITS.admin} → ${MESSAGE_LIMITS.user}\n\n` +
+        `上限を超える既存データは削除されます。\n` +
+        `この操作は元に戻せません。続行しますか？`
+      );
+      if (!confirmed) return;
+    }
+
+    setUpdatingRole(email);
+    try {
+      const token = await user?.getIdToken();
+      const res = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ action: "updateRole", email, role: newRole }),
+      });
+      
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to update role");
+      }
+
+      const data = await res.json();
+      
+      // Update local state
+      setUsers(prev => prev.map(u => u.email === email ? { ...u, role: newRole } : u));
+
+      // ダウングレード時に削除されたデータがあれば通知
+      if (data.cleanup && (data.cleanup.deletedThreads > 0 || data.cleanup.deletedMessages > 0)) {
+        alert(
+          `ロールを変更しました。\n` +
+          `削除されたスレッド: ${data.cleanup.deletedThreads}件\n` +
+          `削除されたメッセージ: ${data.cleanup.deletedMessages}件`
+        );
+      }
+    } catch (err: any) {
+      alert("Error updating user role: " + err.message);
+    } finally {
+      setUpdatingRole(null);
     }
   };
 
@@ -141,15 +195,42 @@ export default function AdminPage() {
                       <div className="font-medium flex items-center gap-2">
                         {u.name || "Unknown User"}
                         {u.role === "admin" && <Badge className="bg-blue-600">Admin</Badge>}
+                        {u.email === user?.email && <Badge variant="outline" className="text-muted-foreground">あなた</Badge>}
                       </div>
                       <div className="text-sm text-muted-foreground flex items-center gap-1"><Mail className="w-3 h-3"/>{u.email}</div>
                       {u.activatedAt && <div className="text-xs text-muted-foreground">Activated: {new Date(u.activatedAt).toLocaleString()}</div>}
                     </div>
-                    {u.role !== "admin" && (
-                      <Button variant="outline" onClick={() => handleStatusChange(u.email, "pending")} className="text-destructive hover:text-destructive hover:bg-destructive/10">
-                        Revoke Access
-                      </Button>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {/* ロール変更ボタン（自分自身は除外） */}
+                      {u.email !== user?.email && (
+                        u.role === "user" ? (
+                          <Button
+                            variant="outline"
+                            onClick={() => handleRoleChange(u.email, "admin")}
+                            disabled={updatingRole === u.email}
+                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950"
+                          >
+                            <Shield className="mr-1 h-4 w-4" />
+                            Admin に昇格
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            onClick={() => handleRoleChange(u.email, "user")}
+                            disabled={updatingRole === u.email}
+                            className="text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:hover:bg-purple-950"
+                          >
+                            <ShieldOff className="mr-1 h-4 w-4" />
+                            User に降格
+                          </Button>
+                        )
+                      )}
+                      {u.email !== user?.email && u.role !== "admin" && (
+                        <Button variant="outline" onClick={() => handleStatusChange(u.email, "pending")} className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                          Revoke Access
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -160,3 +241,4 @@ export default function AdminPage() {
     </div>
   );
 }
+

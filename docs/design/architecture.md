@@ -223,6 +223,7 @@ flowchart LR
 | **認証** | `auth-guard.ts` | Firebase Client SDKの状態監視とフロントエンドでのアクセスブロック |
 | **BFFによる一括処理** | `/api/auth/register-pending` | 未登録ユーザーへの初回登録時、IDトークン検証完了後にサーバー側でFirestoreデータ作成とNodemailer(Gmail SMTP)による管理者へのメール通知をセキュアに一括実行。 |
 | **ユーザー状態** | `users.ts`, `admin-users.ts` | Firestoreから `status: active` および `role: admin` であるか検証（サーバーサイドとクライアントサイドの二重防御） |
+| **ロール管理** | `/api/admin/users` | 管理者によるロール変更（昇格/降格）。ダウングレード時はAdmin SDKで超過データ（スレッド・メッセージ）を削除後にロールを更新。自分自身の変更は禁止 |
 | **入力検証** | 各 API route | メッセージ型・長さ（10,000文字上限） |
 | **パストラバーサル防止** | `prompt-loader.ts` | プリセット名・ファイル名のサニタイズ |
 | **情報漏洩防止** | `stream/route.ts` | 本番環境でスタックトレースを除外 |
