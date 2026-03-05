@@ -2,10 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminAuth } from "@/lib/firebase/admin";
 import { getAdminUserData, createPendingUserAdmin } from "@/lib/firebase/admin-users";
 import { sendActivationRequestEmail } from "@/lib/email/nodemailer";
+import { checkRateLimit } from "@/lib/security/rate-limiter";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
+  const rateLimitResponse = checkRateLimit(req, { maxRequests: 3, windowMs: 60_000 });
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {

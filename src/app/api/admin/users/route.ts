@@ -2,6 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { getAdminUserData, getAllUsersAdmin, updateUserStatusAdmin, updateUserRoleAdmin, UserStatus, UserRole } from "@/lib/firebase/admin-users";
 import { adminAuth, adminDb } from "@/lib/firebase/admin";
 import { THREAD_LIMITS, MESSAGE_LIMITS } from "@/lib/constants/limits";
+import { checkRateLimit } from "@/lib/security/rate-limiter";
 
 export const dynamic = "force-dynamic";
 
@@ -92,6 +93,9 @@ async function enforceDowngradeLimits(userEmail: string, newRole: UserRole): Pro
 }
 
 export async function GET(req: NextRequest) {
+  const rateLimitResponse = checkRateLimit(req, { maxRequests: 5, windowMs: 60_000 });
+  if (rateLimitResponse) return rateLimitResponse;
+
   const adminUser = await checkAdminAuth(req);
   if (!adminUser) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
@@ -115,6 +119,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  const rateLimitResponse = checkRateLimit(req, { maxRequests: 5, windowMs: 60_000 });
+  if (rateLimitResponse) return rateLimitResponse;
+
   const adminUser = await checkAdminAuth(req);
   if (!adminUser) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
