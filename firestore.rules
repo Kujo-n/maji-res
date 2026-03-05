@@ -10,8 +10,16 @@ service cloud.firestore {
 
     // User data rule
     match /users/{userId} {
-      // Allow read/write if the requester is the owner by UID OR their email matches the document ID (userId)
-      allow read, write: if isOwner(userId) || (request.auth != null && request.auth.token.email == userId);
+      // Allow read if the requester is the owner by UID OR their email matches the document ID (userId)
+      allow read: if isOwner(userId) || (request.auth != null && request.auth.token.email == userId);
+      // Allow create only if the email matches (initial registration)
+      allow create: if request.auth != null && request.auth.token.email == userId;
+      // Allow update but prevent role/status tampering from client
+      allow update: if (isOwner(userId) || (request.auth != null && request.auth.token.email == userId))
+                     && request.resource.data.role == resource.data.role
+                     && request.resource.data.status == resource.data.status;
+      // Deny delete from client (admin SDK bypasses rules)
+      allow delete: if false;
 
       // Thread subcollection
       match /threads/{threadId} {
