@@ -166,4 +166,25 @@ describe("POST /api/magi/stream", () => {
     // streamSynthesize SHOULD be called
     expect(mockStreamSynthesize).toHaveBeenCalled();
   });
+
+  it("returns 500 on outer internal error", async () => {
+    // req.json()が例外を投げた場合は外側のcatchに落ちて500を返す
+    const req = createRequest({ message: "Hello" });
+    req.json = vi.fn().mockRejectedValueOnce(new Error("Parse error"));
+    const response = await POST(req);
+    expect(response.status).toBe(500);
+    const body = await response.json();
+    expect(body.error).toBe("Failed to process request");
+  });
+
+  it("handles stream processing errors gracefully", async () => {
+    // streamのstart関数内でエラーが起きた場合はcontroller.errorが呼ばれる
+    mockParallelProcess.mockRejectedValueOnce(new Error("Stream processing failed"));
+    const response = await POST(createRequest({ message: "Hello" }));
+    expect(response.status).toBe(200); // Headers are already sent
+    
+    // Read the stream to trigger the error
+    const reader = response.body!.getReader();
+    await expect(reader.read()).rejects.toThrow();
+  });
 });
