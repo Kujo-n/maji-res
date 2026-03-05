@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
 
   } catch (error: unknown) {
     console.error("MAGI Stream API Error:", error);
-    const isDev = process.env.NODE_ENV !== "production";
+    const isDev = process.env.NODE_ENV === "development";
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     const errorStack = error instanceof Error ? error.stack : undefined;
     
