@@ -87,7 +87,7 @@ export function useMagiChat() {
     }
 
     // アシスタント用のプレースホルダーメッセージを作成
-    let assistantMessage: Message = {
+    const assistantMessage: Message = {
       id: generateId(),
       role: "assistant",
       content: "",

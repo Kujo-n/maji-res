@@ -99,7 +99,7 @@ export const DecisionService = {
    */
   async getDecisionHistory(userId: string, maxResults: number = DEFAULT_HISTORY_LIMIT): Promise<DecisionRecord[]> {
     const decisionsRef = collection(db, "users", userId, "decisions");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const q = query(decisionsRef, orderBy("createdAt", "desc"), limit(maxResults));
     const snapshot = await getDocs(q);
 
