@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.6.0] - 2026-03-07
+
+### Added
+- **課金/無料ユーザーによるエージェント処理モード切替機能** (Issue 003 部分対応):
+  - `ProcessingMode` 型（`"serial"` | `"parallel"`）を `types.ts` に追加。
+  - `AgentIntegrator.process` メソッドに `mode` 引数を追加し、`processParallel`（`Promise.all` による同時実行）と `processSerial`（forループ + 2000ms遅延）に処理を分離。
+  - `route.ts` でユーザーの `role`（`admin` → `parallel`, `user` → `serial`）に基づくサーバーサイドでのモード自動判定を実装。
+  - `integrator.test.ts` にモード切替テスト4件（デフォルトserial、明示serial、parallel、parallelエラーハンドリング）を追加。
+
+### Changed
+- `AgentIntegrator.parallelProcess` メソッドを `process` にリネーム（直列/並列の両方を扱うため命名を改善）。
+- `processSerial` メソッドのインデントを2スペースに統一（コードスタイル修正）。
+
 ## [1.5.2] - 2026-03-03
 
 ### Added

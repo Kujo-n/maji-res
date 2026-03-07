@@ -52,19 +52,39 @@ sequenceDiagram
     U->>O: Send Message
     
     rect rgb(200, 220, 240)
-    Note over O, C: Rate Limit Avoidance (Serial Execution)<br/>See Issue 003 for future parallelization
-    O->>M: Analyze (Logic)
-    M-->>O: Text Stream (Chunks)
-    O-->>U: Protocol 2: Partial Text Updates
-    M-->>O: Final Response + Vote
-    O->>B: Analyze (Ethics)
-    B-->>O: Text Stream (Chunks)
-    O-->>U: Protocol 2: Partial Text Updates
-    B-->>O: Final Response + Vote
-    O->>C: Analyze (Intuition)
-    C-->>O: Text Stream (Chunks)
-    O-->>U: Protocol 2: Partial Text Updates
-    C-->>O: Final Response + Vote
+    Note over O, C: Processing Mode Selection<br/>admin=Parallel / user=Serial (2s delay)
+    
+    alt Parallel Mode (admin)
+        par Run All Agents
+            O->>M: Analyze (Logic)
+            M-->>O: Text Stream (Chunks)
+        and
+            O->>B: Analyze (Ethics)
+            B-->>O: Text Stream (Chunks)
+        and
+            O->>C: Analyze (Intuition)
+            C-->>O: Text Stream (Chunks)
+        end
+        O-->>U: Protocol 2: Parallel Text Updates
+        M-->>O: Final Response + Vote
+        B-->>O: Final Response + Vote
+        C-->>O: Final Response + Vote
+    else Serial Mode (user)
+        O->>M: Analyze (Logic)
+        M-->>O: Text Stream (Chunks)
+        O-->>U: Protocol 2: Partial Text Updates
+        M-->>O: Final Response + Vote
+        Note over O: Wait 2000ms
+        O->>B: Analyze (Ethics)
+        B-->>O: Text Stream (Chunks)
+        O-->>U: Protocol 2: Partial Text Updates
+        B-->>O: Final Response + Vote
+        Note over O: Wait 2000ms
+        O->>C: Analyze (Intuition)
+        C-->>O: Text Stream (Chunks)
+        O-->>U: Protocol 2: Partial Text Updates
+        C-->>O: Final Response + Vote
+    end
     end
     
     O->>I: Synthesize Responses (Start)
@@ -136,7 +156,7 @@ flowchart LR
     UI --> Hook
     Hook -- "POST /api/magi/stream" --> Orch
     
-    Orch -- "Serial Exec with Delay" --> Agents
+    Orch -- "Serial or Parallel Exec" --> Agents
     Agents -- "Text Chunks" --> Orch
     Orch -- "Protocol 2 (DataStream)" --> Hook
     Agents -- "Final Thoughts & Votes" --> Integ
@@ -149,8 +169,13 @@ flowchart LR
     Hook -.-> |"Load History"| DB
 ```
 
-> **Note on Future Parallelization**:
-> 現在のAPIルートはGemini Flashの無償枠制限（RPM制限）を回避するため、直列処理と2000msの待機時間を設けています。この制限を撤廃し完全並列化する将来対応については [Issue 003](../issues/003_parallel_streaming_with_paid_api.md) を参照してください。
+> **Note on Processing Mode**:
+> エージェント処理はユーザーのロールに基づいて自動的にモードが切り替わります。
+> - **`admin`（課金ユーザー）**: `parallel` モード — `Promise.all` による全エージェント同時実行
+> - **`user`（無料ユーザー）**: `serial` モード — `for` ループ + 2000ms遅延による順次実行（Gemini Flash無償枠のRPM制限回避）
+>
+> モード判定は `route.ts` でサーバーサイドに行われ、クライアントからは制御不可。
+> 詳細は [Issue 003](../issues/003_parallel_streaming_with_paid_api.md) を参照。
 
 ### 3. Persistence (Firestore Structure)
 
@@ -223,6 +248,7 @@ flowchart LR
 | **認証** | `auth-guard.ts` | Firebase Client SDKの状態監視とフロントエンドでのアクセスブロック |
 | **BFFによる一括処理** | `/api/auth/register-pending` | 未登録ユーザーへの初回登録時、IDトークン検証完了後にサーバー側でFirestoreデータ作成とNodemailer(Gmail SMTP)による管理者へのメール通知をセキュアに一括実行。 |
 | **ユーザー状態** | `users.ts`, `admin-users.ts` | Firestoreから `status: active` および `role: admin` であるか検証（サーバーサイドとクライアントサイドの二重防御） |
+| **処理モード判定** | `route.ts` | ユーザーロールに基づくエージェント処理モード（`parallel`/`serial`）のサーバーサイド判定。クライアントからの操作不可 |
 | **ロール管理** | `/api/admin/users` | 管理者によるロール変更（昇格/降格）。ダウングレード時はAdmin SDKで超過データ（スレッド・メッセージ）を削除後にロールを更新。自分自身の変更は禁止 |
 | **入力検証** | 各 API route | メッセージ型・長さ（10,000文字上限） |
 | **パストラバーサル防止** | `prompt-loader.ts` | プリセット名・ファイル名のサニタイズ |
