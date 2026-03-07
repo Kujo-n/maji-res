@@ -104,6 +104,15 @@ export abstract class BaseAgent implements IAgent {
           content = content.replace(/CLARIFICATION:\s*.+\n?/gi, "").trim();
         }
 
+        // 解析が完了したあとに、結果の usage オブジェクトからトークン使用量を取得
+        const usage = await result.usage;
+        const tokenUsage = usage ? {
+          // AI SDK v3.1+ などの新しい命名規則に対応 (inputTokens / outputTokens)
+          promptTokens: (usage as any).promptTokens || (usage as any).inputTokens || 0,
+          completionTokens: (usage as any).completionTokens || (usage as any).outputTokens || 0,
+          totalTokens: usage.totalTokens || 0,
+        } : undefined;
+
         // Parse VOTE: from response
         const voteMatch = content.match(/VOTE:\s*(APPROVE|DENY|CONDITIONAL)/i);
         if (voteMatch) {
@@ -117,7 +126,8 @@ export abstract class BaseAgent implements IAgent {
           metadata: { 
             vote, 
             needsClarification, 
-            clarificationQuestions: clarificationQuestions.length > 0 ? clarificationQuestions : undefined 
+            clarificationQuestions: clarificationQuestions.length > 0 ? clarificationQuestions : undefined,
+            tokenUsage
           }
         };
       } catch (error) {

@@ -132,7 +132,12 @@ export class AgentIntegrator {
   }
 
 
-  async streamSynthesize(input: string, responses: AgentResponse[], consensusMode: "majority" | "unanimous" = "majority") {
+  async streamSynthesize(
+    input: string, 
+    responses: AgentResponse[], 
+    consensusMode: "majority" | "unanimous" = "majority",
+    onFinish?: (usage: { promptTokens: number; completionTokens: number; totalTokens: number }) => void
+  ) {
     const { streamText, simulateReadableStream } = await import("ai");
     
     // Mock Mode Check
@@ -210,6 +215,16 @@ Casperの直感は肯定的ですが、リスクも指摘しています。
         return streamText({
           model: resolveModel(this.providerName, this.modelName),
           messages: [{ role: "user", content: prompt }],
+          onFinish: async (event) => {
+             if (onFinish && event.usage) {
+                 const u = event.usage as any;
+                 onFinish({
+                     promptTokens: u.promptTokens || u.inputTokens || 0,
+                     completionTokens: u.completionTokens || u.outputTokens || 0,
+                     totalTokens: u.totalTokens || 0
+                 });
+             }
+          }
         });
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
@@ -261,7 +276,7 @@ Casperの直感は肯定的ですが、リスクも指摘しています。
 
       // Add random fluctuation and confidence factor
       const noise = (Math.random() * 10) - 5; // +/- 5%
-      let rate = baseRate + noise;
+      const rate = baseRate + noise;
 
       // Clamp
       return Math.min(100, Math.max(0, rate));

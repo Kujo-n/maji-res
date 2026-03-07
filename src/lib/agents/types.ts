@@ -28,6 +28,11 @@ export interface AgentResponse {
     // For probing algorithm (P4-T-005)
     needsClarification?: boolean;
     clarificationQuestions?: string[];
+    tokenUsage?: {
+      promptTokens: number;
+      completionTokens: number;
+      totalTokens: number;
+    };
   };
 }
 
