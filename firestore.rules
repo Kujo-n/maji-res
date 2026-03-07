@@ -35,6 +35,13 @@ service cloud.firestore {
       match /decisions/{decisionId} {
         allow read, write: if isOwner(userId);
       }
+
+      // Token Usage subcollection
+      match /tokenUsage/{monthId} {
+        allow read: if isOwner(userId) || (request.auth != null && request.auth.token.email == userId);
+        // Client cannot write directly to tokenUsage, only server-side logic using Admin SDK
+        allow write: if false;
+      }
     }
     
     // Default deny for all other documents
