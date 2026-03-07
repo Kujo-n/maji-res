@@ -1,4 +1,4 @@
-import { IAgent, AgentResponse, AgentContext } from "./types";
+import { IAgent, AgentResponse, AgentContext, ProcessingMode } from "./types";
 import { ConfigurableAgent } from "./configurable-agent";
 import { generateText } from "ai";
 import { resolveModel } from "./provider-resolver";
@@ -18,8 +18,23 @@ export class AgentIntegrator {
     this.agents = config.agents.map(def => new ConfigurableAgent(def, preset, this.modelName, this.providerName));
   }
 
-  async parallelProcess(
+  async process(
     input: string, 
+    context?: AgentContext,
+    onAgentUpdate?: (responses: AgentResponse[]) => void,
+    mode: ProcessingMode = "serial"
+  ): Promise<AgentResponse[]> {
+    if (mode === "parallel") {
+      return this.processParallel(input, context, onAgentUpdate);
+    }
+    return this.processSerial(input, context, onAgentUpdate);
+  }
+
+  /**
+   * 並列処理: Promise.all で全エージェントを同時実行（課金ユーザー向け）
+   */
+  private async processParallel(
+    input: string,
     context?: AgentContext,
     onAgentUpdate?: (responses: AgentResponse[]) => void
   ): Promise<AgentResponse[]> {
@@ -27,35 +42,73 @@ export class AgentIntegrator {
       role: a.role,
       content: "",
     }));
-    
+
+    const promises = this.agents.map((agent, i) =>
+      agent.process(input, context, (chunk) => {
+        results[i] = {
+          ...results[i],
+          content: results[i].content + chunk
+        };
+        if (onAgentUpdate) onAgentUpdate(results);
+      }).then(finalResponse => {
+        results[i] = finalResponse;
+        if (onAgentUpdate) onAgentUpdate(results);
+      }).catch(error => {
+        console.error(`Error in ${agent.name}:`, error);
+        results[i] = {
+          role: agent.role,
+          content: `[システムエラー] ${agent.name} の処理中にエラーが発生しました。`,
+          metadata: { error: String(error) },
+        };
+        if (onAgentUpdate) onAgentUpdate(results);
+      })
+    );
+
+    await Promise.all(promises);
+    return results;
+  }
+
+  /**
+   * 直列処理: for ループ + 2000ms遅延（無料ユーザー向け、レートリミット回避）
+   */
+  private async processSerial(
+    input: string,
+    context?: AgentContext,
+    onAgentUpdate?: (responses: AgentResponse[]) => void
+  ): Promise<AgentResponse[]> {
+    const results: AgentResponse[] = this.agents.map(a => ({
+      role: a.role,
+      content: "",
+    }));
+
     // Execute sequentially to avoid rate limits (Gemini Flash free tier has strict RPM)
     for (let i = 0; i < this.agents.length; i++) {
-        const agent = this.agents[i];
-        try {
-            const finalResponse = await agent.process(input, context, (chunk) => {
-                // ストリーミング中に部分テキストを更新
-                results[i] = {
-                  ...results[i],
-                  content: results[i].content + chunk
-                };
-                if (onAgentUpdate) onAgentUpdate(results);
-            });
-            // 完了時の最終状態をセット（voteなどのメタデータが含まれる状態）
-            results[i] = finalResponse;
-            if (onAgentUpdate) onAgentUpdate(results);
-        } catch (error) {
-            console.error(`Error in ${agent.name}:`, error);
-            results[i] = {
-                role: agent.role,
-                content: `[システムエラー] ${agent.name} の処理中にエラーが発生しました。`,
-                metadata: { error: String(error) },
-            };
-            if (onAgentUpdate) onAgentUpdate(results);
-        }
-        // 2000ms delay between requests for rate limit safety
-        if (i < this.agents.length - 1) {
-             await new Promise(resolve => setTimeout(resolve, 2000));
-        }
+      const agent = this.agents[i];
+      try {
+        const finalResponse = await agent.process(input, context, (chunk) => {
+          // ストリーミング中に部分テキストを更新
+          results[i] = {
+            ...results[i],
+            content: results[i].content + chunk
+          };
+          if (onAgentUpdate) onAgentUpdate(results);
+        });
+        // 完了時の最終状態をセット（voteなどのメタデータが含まれる状態）
+        results[i] = finalResponse;
+        if (onAgentUpdate) onAgentUpdate(results);
+      } catch (error) {
+        console.error(`Error in ${agent.name}:`, error);
+        results[i] = {
+          role: agent.role,
+          content: `[システムエラー] ${agent.name} の処理中にエラーが発生しました。`,
+          metadata: { error: String(error) },
+        };
+        if (onAgentUpdate) onAgentUpdate(results);
+      }
+      // 2000ms delay between requests for rate limit safety
+      if (i < this.agents.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
     }
 
     return results;

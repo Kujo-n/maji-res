@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { createIntegrator } from "@/lib/agents/integrator";
 import { checkRateLimit } from "@/lib/security/rate-limiter";
 import { verifyAuth } from "@/lib/security/auth-guard";
+import { ProcessingMode } from "@/lib/agents/types";
 
 export async function POST(req: NextRequest) {
   // Rate limit check
@@ -13,6 +14,9 @@ export async function POST(req: NextRequest) {
   if (authResult instanceof Response) return authResult;
 
   try {
+    // ユーザーロールに基づく処理モード判定（admin=並列, user=直列）
+    const processingMode: ProcessingMode = authResult.user?.role === "admin" ? "parallel" : "serial";
+
     const { message, preset } = await req.json();
 
     if (!message || typeof message !== "string") {
@@ -37,11 +41,11 @@ export async function POST(req: NextRequest) {
           const integrator = createIntegrator(preset);
           
           // Step 2: Run all three agents in parallel and stream partial results
-          const agentResponses = await integrator.parallelProcess(message, undefined, (partialResponses) => {
+          const agentResponses = await integrator.process(message, undefined, (partialResponses) => {
             // Send intermediate agent responses as data frame (Protocol: "2:[{...}]\n")
             const dataFrame = `2:${JSON.stringify([{ agentResponses: partialResponses }])}\n`;
             controller.enqueue(new TextEncoder().encode(dataFrame));
-          });
+          }, processingMode);
 
           // Step 1.5: Calculate Sync Rate and detect contradictions
           const syncRate = integrator.calculateSyncRate(agentResponses);

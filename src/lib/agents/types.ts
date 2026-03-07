@@ -11,6 +11,9 @@ export type CoreMessage =
 export type WellKnownRole = "MELCHIOR" | "BALTHASAR" | "CASPER" | "INTEGRATOR" | "OUTPUT";
 export type AgentRole = WellKnownRole | (string & {});
 
+/** エージェント処理モード: serial=直列(無料), parallel=並列(課金) */
+export type ProcessingMode = "serial" | "parallel";
+
 export interface AgentResponse {
   content: string;
   role: AgentRole;

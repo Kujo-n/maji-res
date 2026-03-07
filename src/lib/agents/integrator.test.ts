@@ -1,5 +1,8 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { AgentResponse } from "./types";
+
+// Hoisted mock function for ConfigurableAgent.process
+const mockAgentProcess = vi.fn();
 
 // Mock dependencies to avoid actual file system and LLM calls
 vi.mock("./prompts/prompt-loader", () => ({
@@ -17,6 +20,13 @@ vi.mock("./prompts/prompt-loader", () => ({
 }));
 vi.mock("./provider-resolver", () => ({
   resolveModel: vi.fn().mockReturnValue({ provider: "mock", model: "mock" }),
+}));
+vi.mock("./configurable-agent", () => ({
+  ConfigurableAgent: vi.fn().mockImplementation(function (this: any, def: any) {
+    this.name = def.name;
+    this.role = def.name;
+    this.process = (...args: any[]) => mockAgentProcess(...args);
+  }),
 }));
 
 import { AgentIntegrator, createIntegrator } from "./integrator";
@@ -154,6 +164,73 @@ describe("AgentIntegrator", () => {
     it("creates an integrator without preset", () => {
       const integrator = createIntegrator();
       expect(integrator).toBeInstanceOf(AgentIntegrator);
+    });
+  });
+
+  describe("parallelProcess mode", () => {
+    beforeEach(() => {
+      mockAgentProcess.mockReset();
+      mockAgentProcess.mockImplementation(
+        async (_input: string, _context: any, onChunk?: (chunk: string) => void) => {
+          if (onChunk) onChunk("chunk");
+          return {
+            role: "AGENT",
+            content: "Response from agent",
+            metadata: { vote: "APPROVE" as const },
+          };
+        }
+      );
+    });
+
+    it("defaults to serial mode", async () => {
+      const integrator = new AgentIntegrator("MAGI");
+      const responses = await integrator.process("test input");
+      expect(responses).toHaveLength(3);
+      responses.forEach(r => {
+        expect(r.content).toBe("Response from agent");
+      });
+    });
+
+    it("returns all responses in serial mode", async () => {
+      const integrator = new AgentIntegrator("MAGI");
+      const updateFn = vi.fn();
+      const responses = await integrator.process("test input", undefined, updateFn, "serial");
+      expect(responses).toHaveLength(3);
+      expect(updateFn).toHaveBeenCalled();
+    });
+
+    it("returns all responses in parallel mode", async () => {
+      const integrator = new AgentIntegrator("MAGI");
+      const updateFn = vi.fn();
+      const responses = await integrator.process("test input", undefined, updateFn, "parallel");
+      expect(responses).toHaveLength(3);
+      responses.forEach(r => {
+        expect(r.content).toBe("Response from agent");
+        expect(r.metadata?.vote).toBe("APPROVE");
+      });
+      expect(updateFn).toHaveBeenCalled();
+    });
+
+    it("handles errors gracefully in parallel mode", async () => {
+      mockAgentProcess
+        .mockRejectedValueOnce(new Error("API Error"))
+        .mockResolvedValueOnce({
+          role: "BALTHASAR",
+          content: "Response from BALTHASAR",
+          metadata: { vote: "APPROVE" },
+        })
+        .mockResolvedValueOnce({
+          role: "CASPER",
+          content: "Response from CASPER",
+          metadata: { vote: "DENY" },
+        });
+
+      const integrator = new AgentIntegrator("MAGI");
+      const responses = await integrator.process("test input", undefined, undefined, "parallel");
+      expect(responses).toHaveLength(3);
+      expect(responses[0].content).toContain("システムエラー");
+      expect(responses[1].content).toBe("Response from BALTHASAR");
+      expect(responses[2].content).toBe("Response from CASPER");
     });
   });
 });
