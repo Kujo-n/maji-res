@@ -26,15 +26,69 @@ export function PresetProvider({ children }: { children: React.ReactNode }) {
 
   // Fetch available presets
   useEffect(() => {
-    fetch("/api/presets")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.presets) {
+    let isMounted = true;
+    
+    const fetchPresets = async () => {
+      try {
+        // Firebase Auth から現在のユーザーとトークンを取得
+        // preset-contextはトップレベルに近い場所で使われるため、authが初期化されるのを待つか、
+        // 取得できなくてもフォールバックさせるなどの実装が必要です。
+        // ※ 本来は useAuth() フック等で既に取得済みの getIdToken() を使用するのがベストです。
+        // ここでは、/api/presets 側の verifyAuth() に対応するためヘッダ追加の形をとります。
+        
+        const { auth } = await import("@/lib/firebase/client");
+        
+        // ユーザーが取得できるまで少し待つ（onAuthStateChanged 等を使うのが確実だが、
+        // シンプルにするため現在のcurrentUserを取得）
+        let token = "";
+        if (auth.currentUser) {
+           token = await auth.currentUser.getIdToken();
+        }
+
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json"
+        };
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`;
+        }
+
+        const res = await fetch("/api/presets", { headers });
+        if (!res.ok) {
+          throw new Error(`Failed to fetch: ${res.status}`);
+        }
+        const data = await res.json();
+        
+        if (isMounted && data.presets) {
           setAvailablePresets(data.presets);
         }
-      })
-      .catch((err) => console.error("Failed to fetch presets:", err))
-      .finally(() => setIsLoading(false));
+      } catch (err) {
+        console.error("Failed to fetch presets:", err);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+    
+    // Authの状態解決を確約させるため、Firebaseのリスナーを使う
+    const initFetch = async () => {
+      const { auth } = await import("@/lib/firebase/client");
+      const unsubscribe = auth.onIdTokenChanged(async (user) => {
+        if (user) {
+          await fetchPresets();
+        } else {
+          // 未ログイン時はどうするか（一応公開不要APIの場合空にする等）
+          setIsLoading(false);
+        }
+      });
+      return unsubscribe;
+    };
+    
+    let unsub: (() => void) | undefined;
+    initFetch().then(u => unsub = u);
+
+    return () => {
+      isMounted = false;
+      if (unsub) unsub();
+    };
   }, []);
 
   const setPreset = (newPreset: string) => {
