@@ -171,5 +171,26 @@ export const ChatService = {
       id: doc.id,
       ...doc.data()
     } as ThreadData));
+  },
+
+  /**
+   * Delete a thread and all its messages
+   */
+  async deleteThread(userId: string, threadId: string): Promise<void> {
+    const batch = writeBatch(db);
+    
+    // 1. Delete all messages in the thread
+    const msgsRef = collection(db, "users", userId, "threads", threadId, "messages");
+    const msgsSnapshot = await getDocs(msgsRef);
+    msgsSnapshot.forEach(msgDoc => {
+      batch.delete(msgDoc.ref);
+    });
+
+    // 2. Delete the thread document itself
+    const threadRef = doc(db, "users", userId, "threads", threadId);
+    batch.delete(threadRef);
+
+    // 3. Commit the batch
+    await batch.commit();
   }
 };

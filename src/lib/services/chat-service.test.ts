@@ -92,4 +92,29 @@ describe('ChatService', () => {
       expect(updateDoc).toHaveBeenCalled();
     });
   });
+
+  describe('deleteThread', () => {
+    it('deletes a thread and its messages via batch', async () => {
+      const mockMessageDocs = [
+        { id: 'msg1', ref: { path: 'msg1-ref' } },
+        { id: 'msg2', ref: { path: 'msg2-ref' } }
+      ];
+      (getDocs as any).mockResolvedValue({
+        forEach: (cb: any) => mockMessageDocs.forEach(cb)
+      });
+
+      const mockBatch = {
+        delete: vi.fn(),
+        commit: vi.fn()
+      };
+      (writeBatch as any).mockReturnValue(mockBatch);
+      (doc as any).mockReturnValue({ path: 'thread-ref' });
+
+      await ChatService.deleteThread('user1', 'thread1');
+
+      // The thread doc + 2 messages = 3 deletes
+      expect(mockBatch.delete).toHaveBeenCalledTimes(3);
+      expect(mockBatch.commit).toHaveBeenCalled();
+    });
+  });
 });

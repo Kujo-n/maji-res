@@ -17,6 +17,8 @@ interface ChatContextType {
   refreshHistory: () => Promise<void>;
   /** 特定のスレッドを選択してアクティブにする */
   selectThread: (threadId: string) => void;
+  /** 特定のスレッドを削除する */
+  deleteThread: (threadId: string) => Promise<void>;
   /** 新規チャットを開始する（現在のスレッドをクリアし新規状態へ） */
   startNewChat: () => void;
   /** 新しいスレッドが作成された際にactiveThreadIdを更新する */
@@ -30,6 +32,7 @@ const ChatContext = createContext<ChatContextType>({
   history: [],
   refreshHistory: async () => {},
   selectThread: () => {},
+  deleteThread: async () => {},
   startNewChat: () => {},
   setActiveThreadId: () => {},
   isLoadingHistory: false,
@@ -74,6 +77,21 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     setActiveThreadId(threadId);
   }, []);
 
+  // ---- スレッド削除 ----
+  const deleteThread = useCallback(async (threadId: string) => {
+    if (!user) return;
+    try {
+      await ChatService.deleteThread(user.uid, threadId);
+      setHistory(prev => prev.filter(t => t.id !== threadId));
+      if (activeThreadId === threadId) {
+        setActiveThreadId(null);
+      }
+    } catch (e) {
+      console.error("Failed to delete thread:", e);
+      throw e;
+    }
+  }, [user, activeThreadId]);
+
   // ---- 新規チャット ----
   const startNewChat = useCallback(() => {
     setActiveThreadId(null);
@@ -86,6 +104,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         history,
         refreshHistory,
         selectThread,
+        deleteThread,
         startNewChat,
         setActiveThreadId,
         isLoadingHistory,
