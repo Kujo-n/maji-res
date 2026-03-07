@@ -18,7 +18,7 @@ export class MagiOrchestrator {
 
   async process(input: string, context?: AgentContext): Promise<MagiResult> {
     // Step 1: Run all three agents in parallel
-    const agentResponses = await this.integrator.parallelProcess(input, context);
+    const agentResponses = await this.integrator.process(input, context);
 
     // Step 2: Calculate sync rate (simplified: based on response similarity/agreement)
     const syncRate = this.calculateSyncRate(agentResponses);

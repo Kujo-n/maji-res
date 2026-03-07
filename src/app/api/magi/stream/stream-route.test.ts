@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest, NextResponse } from "next/server";
 
 // Create hoisted mock functions
-const { mockParallelProcess, mockCalculateSyncRate, mockDetectContradictions, mockStreamSynthesize, mockDetermineDecision } = vi.hoisted(() => ({
-  mockParallelProcess: vi.fn().mockResolvedValue([
+const { mockProcess, mockCalculateSyncRate, mockDetectContradictions, mockStreamSynthesize, mockDetermineDecision } = vi.hoisted(() => ({
+  mockProcess: vi.fn().mockResolvedValue([
     { role: "MELCHIOR", content: "Agent 1 response", metadata: { vote: "APPROVE" } },
     { role: "BALTHASAR", content: "Agent 2 response", metadata: { vote: "APPROVE" } },
     { role: "CASPER", content: "Agent 3 response", metadata: { vote: "DENY" } },
@@ -33,7 +33,7 @@ vi.mock("@/lib/security/auth-guard", () => ({
 }));
 vi.mock("@/lib/agents/integrator", () => ({
   createIntegrator: vi.fn().mockReturnValue({
-    parallelProcess: mockParallelProcess,
+    process: mockProcess,
     calculateSyncRate: mockCalculateSyncRate,
     detectContradictions: mockDetectContradictions,
     streamSynthesize: mockStreamSynthesize,
@@ -61,7 +61,7 @@ describe("POST /api/magi/stream", () => {
     vi.mocked(verifyAuth).mockResolvedValue({ uid: "test-user" });
     
     // Reset mock to default behavior
-    mockParallelProcess.mockResolvedValue([
+    mockProcess.mockResolvedValue([
       { role: "MELCHIOR", content: "Agent 1 response", metadata: { vote: "APPROVE" } },
       { role: "BALTHASAR", content: "Agent 2 response", metadata: { vote: "APPROVE" } },
       { role: "CASPER", content: "Agent 3 response", metadata: { vote: "DENY" } },
@@ -118,7 +118,7 @@ describe("POST /api/magi/stream", () => {
     expect(response.status).toBe(200);
   });
   it("skips streamSynthesize when verdict is CONDITIONAL", async () => {
-    mockParallelProcess.mockResolvedValue([
+    mockProcess.mockResolvedValue([
       { role: "MELCHIOR", content: "ok", metadata: { vote: "APPROVE" } },
       { role: "BALTHASAR", content: "no", metadata: { vote: "DENY" } },
       { role: "CASPER", content: "maybe", metadata: { vote: "CONDITIONAL" } },
@@ -145,7 +145,7 @@ describe("POST /api/magi/stream", () => {
   });
 
   it("calls streamSynthesize when verdict is APPROVE (majority)", async () => {
-    mockParallelProcess.mockResolvedValue([
+    mockProcess.mockResolvedValue([
       { role: "MELCHIOR", content: "ok", metadata: { vote: "APPROVE" } },
       { role: "BALTHASAR", content: "ok", metadata: { vote: "APPROVE" } },
       { role: "CASPER", content: "no", metadata: { vote: "DENY" } },
@@ -179,7 +179,7 @@ describe("POST /api/magi/stream", () => {
 
   it("handles stream processing errors gracefully", async () => {
     // streamのstart関数内でエラーが起きた場合はcontroller.errorが呼ばれる
-    mockParallelProcess.mockRejectedValueOnce(new Error("Stream processing failed"));
+    mockProcess.mockRejectedValueOnce(new Error("Stream processing failed"));
     const response = await POST(createRequest({ message: "Hello" }));
     expect(response.status).toBe(200); // Headers are already sent
     
