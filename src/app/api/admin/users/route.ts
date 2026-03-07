@@ -109,6 +109,7 @@ export async function GET(req: NextRequest) {
       ...u,
       createdAt: u.createdAt ? (u.createdAt as any).toDate().toISOString() : null,
       activatedAt: u.activatedAt ? (u.activatedAt as any).toDate().toISOString() : null,
+      currentMonthTokens: u.currentMonthTokens || 0,
     }));
     
     return NextResponse.json({ users: safeUsers });

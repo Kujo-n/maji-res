@@ -196,6 +196,11 @@ export default function AdminPage() {
                         {u.name || "Unknown User"}
                         {u.role === "admin" && <Badge className="bg-blue-600">Admin</Badge>}
                         {u.email === user?.email && <Badge variant="outline" className="text-muted-foreground">あなた</Badge>}
+                        {u.currentMonthTokens !== undefined && (
+                          <Badge variant="outline" className="ml-2 text-xs bg-muted/50">
+                            今月のトークン: {u.currentMonthTokens.toLocaleString()}
+                          </Badge>
+                        )}
                       </div>
                       <div className="text-sm text-muted-foreground flex items-center gap-1"><Mail className="w-3 h-3"/>{u.email}</div>
                       {u.activatedAt && <div className="text-xs text-muted-foreground">Activated: {new Date(u.activatedAt).toLocaleString()}</div>}
