@@ -3,6 +3,7 @@ import { createIntegrator } from "@/lib/agents/integrator";
 import { checkRateLimit } from "@/lib/security/rate-limiter";
 import { verifyAuth } from "@/lib/security/auth-guard";
 import { ProcessingMode } from "@/lib/agents/types";
+import { TokenUsageService } from "@/lib/services/token-usage-service";
 
 export async function POST(req: NextRequest) {
   // Rate limit check
@@ -51,6 +52,14 @@ export async function POST(req: NextRequest) {
           const syncRate = integrator.calculateSyncRate(agentResponses);
           const contradiction = integrator.detectContradictions(agentResponses);
 
+          // 集計: 3エージェントの処理で発生したトークン量
+          let currentTotalTokens = 0;
+          for (const res of agentResponses) {
+              if (res.metadata?.tokenUsage?.totalTokens) {
+                  currentTotalTokens += res.metadata.tokenUsage.totalTokens;
+              }
+          }
+
           // Final update with syncRate and contradiction
           const dataFrame = `2:${JSON.stringify([{ agentResponses, syncRate, contradiction }])}\n`;
           controller.enqueue(new TextEncoder().encode(dataFrame));
@@ -64,11 +73,35 @@ export async function POST(req: NextRequest) {
             const verdictFrame = `0:${JSON.stringify("VERDICT: CONDITIONAL\n")}\n`;
             controller.enqueue(new TextEncoder().encode(verdictFrame));
             controller.close();
+            
+            // トークン保存（CONDITIONAL の場合はここまで）
+            // authResult 経由の user 情報に含まれるプロパティの安全な取得 (メールアドレス等) を用いる方針。
+            // auth-guard.ts の実装次第だが、一般的にFirebaseトークンには uid や email が含まれる。
+            const userRef = (authResult.user as any)?.uid || (authResult.user as any)?.email;
+            if (userRef && currentTotalTokens > 0) {
+              TokenUsageService.recordUsage(userRef, currentTotalTokens).catch((err: any) => 
+                console.error("Failed to record token usage (Conditional):", err)
+              );
+            }
             return;
           }
 
           // Step 3: Stream the synthesis response
-          const result = await integrator.streamSynthesize(message, agentResponses);
+          const result = await integrator.streamSynthesize(
+            message, 
+            agentResponses, 
+            "majority", 
+            (usage) => {
+              // 統合処理でのトークン量を加算して保存
+              currentTotalTokens += usage.totalTokens;
+              const userRef = (authResult.user as any)?.uid || (authResult.user as any)?.email;
+              if (userRef && currentTotalTokens > 0) {
+                TokenUsageService.recordUsage(userRef, currentTotalTokens).catch((err: any) => 
+                  console.error("Failed to record token usage (Synthesize):", err)
+                );
+              }
+            }
+          );
           
           // Get the underlying text stream from the result
           const textStreamResponse = result.toTextStreamResponse();
