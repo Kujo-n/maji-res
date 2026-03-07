@@ -189,6 +189,10 @@ allowlist/
     activatedAt?: Timestamp
 
 users/{userId}/
+  tokenUsage/{YYYY-MM}/
+    month: string
+    totalTokens: number
+    updatedAt: Timestamp
   threads/{threadId}/
     title: string
     createdAt: Timestamp
@@ -250,6 +254,7 @@ flowchart LR
 | **ユーザー状態** | `users.ts`, `admin-users.ts` | Firestoreから `status: active` および `role: admin` であるか検証（サーバーサイドとクライアントサイドの二重防御） |
 | **処理モード判定** | `route.ts` | ユーザーロールに基づくエージェント処理モード（`parallel`/`serial`）のサーバーサイド判定。クライアントからの操作不可 |
 | **ロール管理** | `/api/admin/users` | 管理者によるロール変更（昇格/降格）。ダウングレード時はAdmin SDKで超過データ（スレッド・メッセージ）を削除後にロールを更新。自分自身の変更は禁止 |
+| **トークン使用量記録** | `token-usage-service.ts` | APIルートでのストリーム完了時、Firestoreの `FieldValue.increment` を用いたアトミックな月次トークン使用量加算（サーバーサイド処理のみ）。`tokenUsage` のクライアント独自書き込み禁止ルールを設定 |
 | **入力検証** | 各 API route | メッセージ型・長さ（10,000文字上限） |
 | **パストラバーサル防止** | `prompt-loader.ts` | プリセット名・ファイル名のサニタイズ |
 | **情報漏洩防止** | `stream/route.ts` | 本番環境でスタックトレースを除外 |

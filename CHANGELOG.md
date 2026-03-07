@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.7.0] - 2026-03-07
+
+### Added
+- **ユーザーごとの月間APIトークン使用量トラッキング・表示機能**:
+  - Vercel AI SDK の `usage` プロパティを活用し、各エージェントおよび統合エージェントのトークン消費量を抽出する仕組みを `base-agent.ts`, `integrator.ts` に実装。
+  - Firestore に `users/{uid}/tokenUsage/{YYYY-MM}` サブコレクションを作成し、月単位の消費トークン量を記録する `TokenUsageService` を追加。並行処理の競合を防ぐため `FieldValue.increment` を採用してアトミック性を確保。
+  - バックエンドAPIルート（`/api/magi/stream`）にて合算処理とFirestoreへの非同期ログ記録処理を追加。
+  - Firestore セキュリティルール（`firestore.rules`）を更新し、`tokenUsage` のクライアント側書き込みを禁止、読み取りは本人のみに制限することでセキュアな設計を遵守。
+  - 管理用ダッシュボード（`/admin`）にて、ユーザー一覧と共に「今月のトークン使用量」を一覧表示可能にするUIならびにAPI（`getAllUsersAdmin`）の拡張を追加。
+  - 関連するユニットテスト (`token-usage-service.test.ts`) を追加。
+
+### Fixed
+- **プリセット選択エラーの修正**: `src/components/preset/preset-context.tsx` からの `/api/presets` リクエスト時、Firebase Auth トークン（`Authorization: Bearer <token>`）が付与されず 401 Unauthorized になり、プリセットが空欄となるUIバグを修正。
+
 ## [1.6.0] - 2026-03-07
 
 ### Added
