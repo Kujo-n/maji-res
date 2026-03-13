@@ -1,5 +1,6 @@
-import { db } from "@/lib/firebase/client";
-import { doc, setDoc, increment, serverTimestamp, getDoc } from "firebase/firestore";
+import "server-only";
+import { adminDb } from "@/lib/firebase/admin";
+import { FieldValue } from "firebase-admin/firestore";
 
 export interface TokenUsageRecord {
   month: string; // YYYY-MM format
@@ -20,6 +21,7 @@ export const TokenUsageService = {
 
   /**
    * 指定ユーザーの当月のトークン使用量を加算します。
+   * Admin SDKを使用してサーバーサイドからFirestoreに書き込みます。
    * @param userId ユーザー（Firebase Auth UID または Email）
    * @param extraTokens 消費されたトークン数
    */
@@ -27,29 +29,27 @@ export const TokenUsageService = {
     if (!userId || isNaN(extraTokens) || extraTokens <= 0) return;
 
     const monthKey = this.getCurrentMonthKey();
-    const usageDocRef = doc(db, "users", userId, "tokenUsage", monthKey);
+    const usageDocRef = adminDb.collection("users").doc(userId).collection("tokenUsage").doc(monthKey);
 
-    // merge: true を指定することで、ドキュメントが存在しない場合は新規作成され、
-    // 存在する場合は既存の totalTokens フィールドに increment() された値が加算されます。
-    await setDoc(usageDocRef, {
+    await usageDocRef.set({
       month: monthKey,
-      totalTokens: increment(extraTokens),
-      updatedAt: serverTimestamp(),
+      totalTokens: FieldValue.increment(extraTokens),
+      updatedAt: FieldValue.serverTimestamp(),
     }, { merge: true });
   },
 
   /**
-   * 指定ユーザーの特定月のトークン使用量を取得します（主に見表示・検証用）。
+   * 指定ユーザーの特定月のトークン使用量を取得します（主に表示・検証用）。
    * 管理画面の一括取得は Admin SDK 側 (admin-users.ts) に実装します。
    * @param userId ユーザーID
    * @param monthKey YYYY-MM
    */
   async getUsage(userId: string, monthKey: string): Promise<number> {
-    const usageDocRef = doc(db, "users", userId, "tokenUsage", monthKey);
-    const snapshot = await getDoc(usageDocRef);
-    if (snapshot.exists()) {
+    const usageDocRef = adminDb.collection("users").doc(userId).collection("tokenUsage").doc(monthKey);
+    const snapshot = await usageDocRef.get();
+    if (snapshot.exists) {
       const data = snapshot.data();
-      return data.totalTokens || 0;
+      return data?.totalTokens || 0;
     }
     return 0;
   }

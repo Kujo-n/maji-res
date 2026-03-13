@@ -66,7 +66,12 @@ export abstract class BaseAgent implements IAgent {
                 confidence: 0.9,
                 vote: randomVote,
                 needsClarification,
-                clarificationQuestions
+                clarificationQuestions,
+                tokenUsage: {
+                    promptTokens: 100,
+                    completionTokens: 50,
+                    totalTokens: 150,
+                }
             }
         };
     }

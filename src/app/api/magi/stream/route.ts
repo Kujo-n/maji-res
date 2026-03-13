@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
             // トークン保存（CONDITIONAL の場合はここまで）
             // authResult 経由の user 情報に含まれるプロパティの安全な取得 (メールアドレス等) を用いる方針。
             // auth-guard.ts の実装次第だが、一般的にFirebaseトークンには uid や email が含まれる。
-            const userRef = (authResult.user as any)?.uid || (authResult.user as any)?.email;
+            const userRef = authResult.user?.email || authResult.uid;
             if (userRef && currentTotalTokens > 0) {
               TokenUsageService.recordUsage(userRef, currentTotalTokens).catch((err: any) => 
                 console.error("Failed to record token usage (Conditional):", err)
@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
             (usage) => {
               // 統合処理でのトークン量を加算して保存
               currentTotalTokens += usage.totalTokens;
-              const userRef = (authResult.user as any)?.uid || (authResult.user as any)?.email;
+              const userRef = authResult.user?.email || authResult.uid;
               if (userRef && currentTotalTokens > 0) {
                 TokenUsageService.recordUsage(userRef, currentTotalTokens).catch((err: any) => 
                   console.error("Failed to record token usage (Synthesize):", err)
